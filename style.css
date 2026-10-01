@@ -1,0 +1,732 @@
+/* ================================
+   CONFIGURAÇÕES GERAIS
+================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111827;
+    color: #f3f4f6;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+/* ================================
+   ESTRUTURA PRINCIPAL
+================================ */
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* ================================
+   MENU LATERAL
+================================ */
+
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+
+    background: #0f172a;
+
+    border-right: 1px solid #1e293b;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 24px 16px;
+}
+
+
+/* LOGO */
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 21px;
+    font-weight: bold;
+
+    padding: 0 12px;
+    margin-bottom: 35px;
+
+    color: #ffffff;
+}
+
+
+/* MENU */
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 14px;
+
+    border-radius: 8px;
+
+    color: #94a3b8;
+
+    font-size: 14px;
+
+    transition: 0.2s;
+}
+
+.menu-item:hover {
+    background: #1e293b;
+    color: #ffffff;
+}
+
+.menu-item.active {
+    background: #1d4ed8;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+
+/* PARTE INFERIOR */
+
+.menu-bottom {
+    margin-top: auto;
+}
+
+
+/* ================================
+   ÁREA PRINCIPAL
+================================ */
+
+.main {
+    flex: 1;
+    min-width: 0;
+
+    background: #111827;
+}
+
+
+/* ================================
+   TOPO
+================================ */
+
+.topbar {
+    height: 82px;
+
+    background: #111827;
+
+    border-bottom: 1px solid #1e293b;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 35px;
+}
+
+.topbar h1 {
+    font-size: 22px;
+    margin-bottom: 5px;
+
+    color: #ffffff;
+}
+
+.topbar p {
+    font-size: 13px;
+    color: #64748b;
+}
+
+
+/* USUÁRIO */
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 50%;
+
+    background: #1e3a8a;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user strong {
+    display: block;
+
+    font-size: 13px;
+
+    color: #f8fafc;
+}
+
+.user small {
+    display: block;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+    margin-top: 3px;
+}
+
+
+/* ================================
+   CONTEÚDO
+================================ */
+
+.content {
+    padding: 30px 35px;
+}
+
+
+/* BOAS-VINDAS */
+
+.welcome {
+    margin-bottom: 25px;
+}
+
+.welcome h2 {
+    font-size: 20px;
+
+    margin-bottom: 6px;
+
+    color: #ffffff;
+}
+
+.welcome p {
+    color: #94a3b8;
+
+    font-size: 13px;
+}
+
+
+/* ================================
+   CARDS
+================================ */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 18px;
+
+    margin-bottom: 25px;
+}
+
+.card {
+    background: #1e293b;
+
+    border: 1px solid #334155;
+
+    border-radius: 10px;
+
+    padding: 20px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    transition: 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+
+    border-color: #475569;
+}
+
+.card-icon {
+    width: 45px;
+    height: 45px;
+
+    border-radius: 9px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 21px;
+}
+
+.card-icon.blue {
+    background: #172554;
+}
+
+.card-icon.orange {
+    background: #431407;
+}
+
+.card-icon.green {
+    background: #052e16;
+}
+
+.card-icon.red {
+    background: #450a0a;
+}
+
+.card span {
+    display: block;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+
+    margin-bottom: 6px;
+}
+
+.card strong {
+    display: block;
+
+    font-size: 20px;
+
+    color: #ffffff;
+}
+
+
+/* ================================
+   PAINÉIS
+================================ */
+
+.dashboard-grid {
+    display: grid;
+
+    grid-template-columns:
+        1.5fr 1fr;
+
+    gap: 20px;
+}
+
+.panel {
+    background: #1e293b;
+
+    border: 1px solid #334155;
+
+    border-radius: 10px;
+
+    min-height: 350px;
+}
+
+.panel-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 20px;
+
+    border-bottom: 1px solid #334155;
+}
+
+.panel-header h3 {
+    font-size: 15px;
+
+    margin-bottom: 4px;
+
+    color: #ffffff;
+}
+
+.panel-header p {
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+.panel-header button {
+    border: none;
+
+    background: transparent;
+
+    color: #60a5fa;
+
+    font-size: 12px;
+}
+
+
+/* ================================
+   ÁREA VAZIA
+================================ */
+
+.empty {
+    height: 270px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 20px;
+}
+
+.empty-icon {
+    width: 55px;
+    height: 55px;
+
+    background: #0f172a;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+
+    margin-bottom: 12px;
+}
+
+.empty h4 {
+    font-size: 14px;
+
+    margin-bottom: 6px;
+
+    color: #f8fafc;
+}
+
+.empty p {
+    color: #64748b;
+
+    font-size: 12px;
+
+    max-width: 250px;
+
+    margin-bottom: 15px;
+}
+
+
+/* ================================
+   BOTÃO PRINCIPAL
+================================ */
+
+.primary-button {
+    border: none;
+
+    background: #2563eb;
+
+    color: white;
+
+    padding: 9px 15px;
+
+    border-radius: 7px;
+
+    font-size: 12px;
+
+    transition: 0.2s;
+}
+
+.primary-button:hover {
+    background: #1d4ed8;
+}
+
+
+/* ================================
+   RESPONSIVIDADE
+================================ */
+
+@media (max-width: 1000px) {
+
+    .cards {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .sidebar {
+        width: 70px;
+
+        padding: 20px 10px;
+    }
+
+    .logo span,
+    .menu-item span {
+        display: none;
+    }
+
+    .logo {
+        justify-content: center;
+        padding: 0;
+    }
+
+    .menu-item {
+        justify-content: center;
+    }
+
+    .topbar {
+        padding: 0 20px;
+    }
+
+    .user div:last-child {
+        display: none;
+    }
+
+    .content {
+        padding: 25px 20px;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+}
+.hidden {
+    display: none !important;
+}
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 9999;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 600px;
+
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 25px;
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 25px;
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close-button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    margin-bottom: 7px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 12px;
+
+    border: 1px solid #334155;
+    border-radius: 8px;
+
+    background: #0f172a;
+    color: white;
+
+    font-size: 14px;
+}
+
+.form-group textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+.primary-button,
+.secondary-button {
+    padding: 11px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.primary-button {
+    background: #2563eb;
+    color: white;
+}
+
+.primary-button:hover {
+    background: #1d4ed8;
+}
+
+.secondary-button {
+    background: #334155;
+    color: white;
+}
+
+.secondary-button:hover {
+    background: #475569;
+}
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+thead th {
+    text-align: left;
+    padding: 12px 16px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+tbody tr {
+    background: #0f172a;
+}
+
+tbody td {
+    padding: 16px;
+    color: #e2e8f0;
+    white-space: nowrap;
+}
+
+tbody tr td:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+tbody tr td:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+tbody tr:hover {
+    background: #172033;
+}
+
+#totalClientes {
+    color: #94a3b8;
+    margin-top: 5px;
+}
+
+/* ==============================
+   FICHA DO CLIENTE
+   ============================== */
+
+.cliente-dados {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.cliente-dados .panel:first-child {
+    grid-column: 1 / -1;
+}
+
+.cliente-dados h3 {
+    margin-bottom: 20px;
+}
+
+.dados-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.dados-grid div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.dados-grid span {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.dados-grid strong {
+    color: #f1f5f9;
+    font-size: 15px;
+}
+
+.cliente-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #60a5fa;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cliente-link:hover {
+    text-decoration: underline;
+}
