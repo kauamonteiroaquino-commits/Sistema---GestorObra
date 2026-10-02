@@ -2830,3 +2830,117 @@ pesquisaCompra.addEventListener(
 // ==============================
 
 mostrarCompras();
+
+
+// ==============================
+// LOGIN GESTOROBRA
+// ==============================
+
+const usuarioCorreto = "ADM";
+const senhaCorreta = "ADM";
+
+const telaLogin = document.getElementById("telaLogin");
+const loginUsuario = document.getElementById("loginUsuario");
+const loginSenha = document.getElementById("loginSenha");
+const btnLogin = document.getElementById("btnLogin");
+const erroLogin = document.getElementById("erroLogin");
+
+
+// ==============================
+// FUNÇÃO PARA ENTRAR
+// ==============================
+
+function fazerLogin() {
+
+    const usuario = loginUsuario.value.trim();
+    const senha = loginSenha.value;
+
+    if (usuario === usuarioCorreto && senha === senhaCorreta) {
+
+        // Salva o acesso
+        localStorage.setItem(
+            "gestorObraLogado",
+            "true"
+        );
+
+        // Esconde a tela de login
+        telaLogin.classList.add("hidden");
+document.querySelectorAll(".page").forEach(function(page) {
+    page.classList.add("hidden");
+});
+
+document.getElementById("page-dashboard").classList.remove("hidden");
+
+document.querySelectorAll(".menu-item").forEach(function(menu) {
+    menu.classList.remove("active");
+});
+
+document.querySelector('[data-page="dashboard"]').classList.add("active");
+        // Esconde mensagem de erro
+        erroLogin.classList.add("hidden");
+
+        // Limpa os campos
+        loginUsuario.value = "";
+        loginSenha.value = "";
+
+    } else {
+
+        // Mostra erro
+        erroLogin.classList.remove("hidden");
+
+        loginSenha.value = "";
+        loginSenha.focus();
+
+    }
+}
+
+
+// ==============================
+// BOTÃO ENTRAR
+// ==============================
+
+btnLogin.addEventListener("click", fazerLogin);
+
+
+// ==============================
+// ENTER NA SENHA
+// ==============================
+
+loginSenha.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+
+        fazerLogin();
+
+    }
+
+});
+
+
+// ==============================
+// VERIFICAR ACESSO SALVO
+// ==============================
+
+if (
+    localStorage.getItem("gestorObraLogado") === "true"
+) {
+
+    telaLogin.classList.add("hidden");
+
+} else {
+
+    telaLogin.classList.remove("hidden");
+
+}
+
+// BOTÃO SAIR
+document.getElementById("btnSair").addEventListener("click", function(event) {
+    event.preventDefault();
+
+    localStorage.removeItem("gestorObraLogado");
+
+    document.getElementById("telaLogin").classList.remove("hidden");
+    document.getElementById("loginUsuario").value = "";
+    document.getElementById("loginSenha").value = "";
+});
+
