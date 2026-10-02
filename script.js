@@ -966,3 +966,53 @@ function abrirCliente(id) {
         }
     }
 }
+
+// ==============================
+// MÁSCARAS AUTOMÁTICAS (CPF/CNPJ E TELEFONE)
+// ==============================
+
+function aplicarMascaraCpfCnpj(e) {
+    let valor = e.target.value.replace(/\D/g, "");
+    
+    if (valor.length <= 11) {
+        // Formato CPF: 000.000.000-00
+        valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+        valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+        valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+        // Formato CNPJ: 00.000.000/0000-00
+        valor = valor.substring(0, 14);
+        valor = valor.replace(/^(\d{2})(\d)/, "$1.$2");
+        valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+        valor = valor.replace(/\.(\d{3})(\d)/, ".$1/$2");
+        valor = valor.replace(/(\d{4})(\d)/, "$1-$2");
+    }
+    
+    e.target.value = valor;
+}
+
+function aplicarMascaraTelefone(e) {
+    let valor = e.target.value.replace(/\D/g, "").substring(0, 11);
+    
+    if (valor.length > 10) {
+        valor = valor.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+    } else if (valor.length > 6) {
+        valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+    } else if (valor.length > 2) {
+        valor = valor.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
+    } else if (valor.length > 0) {
+        valor = valor.replace(/^(\d*)/, "($1");
+    }
+    
+    e.target.value = valor;
+}
+
+const inputDocCliente = document.getElementById("documentoCliente");
+if (inputDocCliente) {
+    inputDocCliente.addEventListener("input", aplicarMascaraCpfCnpj);
+}
+
+const inputTelCliente = document.getElementById("telefoneCliente");
+if (inputTelCliente) {
+    inputTelCliente.addEventListener("input", aplicarMascaraTelefone);
+}
