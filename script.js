@@ -1,4 +1,83 @@
 // ==============================
+// AUTENTICAÇÃO E LOGIN
+// ==============================
+
+const telaLogin = document.getElementById("telaLogin");
+const appContainer = document.querySelector(".app");
+const btnLogin = document.getElementById("btnLogin");
+const btnSair = document.getElementById("btnSair");
+const erroLogin = document.getElementById("erroLogin");
+
+function verificarAutenticacao() {
+    const usuarioLogado = localStorage.getItem("usuarioLogado");
+    if (usuarioLogado === "true") {
+        if (telaLogin) telaLogin.classList.add("hidden");
+        if (appContainer) appContainer.style.display = "flex";
+        
+        // Garante que ao entrar vai para a tela principal (Dashboard)
+        redirecionarParaDashboard();
+    } else {
+        if (telaLogin) telaLogin.classList.remove("hidden");
+        if (appContainer) appContainer.style.display = "none";
+    }
+}
+
+function redirecionarParaDashboard() {
+    // Remove o destaque de todos os itens do menu e ativa o Dashboard
+    const menuItems = document.querySelectorAll(".menu-item");
+    menuItems.forEach(menu => menu.classList.remove("active"));
+    
+    const menuDash = document.querySelector('.menu-item[data-page="dashboard"]');
+    if (menuDash) menuDash.classList.add("active");
+
+    // Esconde todas as páginas e exibe a página do Dashboard
+    const pages = document.querySelectorAll(".page");
+    pages.forEach(page => page.classList.add("hidden"));
+
+    const pageDashboard = document.getElementById("page-dashboard");
+    if (pageDashboard) pageDashboard.classList.remove("hidden");
+}
+
+function realizarLogin() {
+    const inputUsuario = document.getElementById("loginUsuario");
+    const inputSenha = document.getElementById("loginSenha");
+
+    const usuario = inputUsuario ? inputUsuario.value.trim().toUpperCase() : "";
+    const senha = inputSenha ? inputSenha.value.trim().toUpperCase() : "";
+
+    if (usuario === "ADM" && senha === "ADM") {
+        localStorage.setItem("usuarioLogado", "true");
+        if (erroLogin) erroLogin.classList.add("hidden");
+        
+        // Limpa os campos de input do login
+        if (inputUsuario) inputUsuario.value = "";
+        if (inputSenha) inputSenha.value = "";
+
+        verificarAutenticacao();
+    } else {
+        if (erroLogin) erroLogin.classList.remove("hidden");
+    }
+}
+
+if (btnLogin) btnLogin.addEventListener("click", realizarLogin);
+
+const formLoginOnSubmit = document.getElementById("formLoginOnSubmit");
+if (formLoginOnSubmit) {
+    formLoginOnSubmit.addEventListener("submit", function(event) {
+        event.preventDefault();
+        realizarLogin();
+    });
+}
+
+if (btnSair) {
+    btnSair.addEventListener("click", function(e) {
+        e.preventDefault();
+        localStorage.removeItem("usuarioLogado");
+        verificarAutenticacao();
+    });
+}
+
+// ==============================
 // FUNÇÕES AUXILIARES / UTILITÁRIAS
 // ==============================
 
@@ -8,6 +87,27 @@ function converterMoedaParaNumero(valorTexto) {
     const limpo = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
     return Number(limpo) || 0;
 }
+
+function aplicarMascaraMoeda(input) {
+    if (!input) return;
+    input.addEventListener("input", function(e) {
+        let valor = e.target.value.replace(/\D/g, "");
+        if (valor === "") {
+            e.target.value = "";
+            return;
+        }
+        valor = (Number(valor) / 100).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+        e.target.value = valor;
+    });
+}
+
+// Aplicação automática de máscara em todos os inputs com a classe .input-moeda
+document.querySelectorAll(".input-moeda").forEach(input => {
+    aplicarMascaraMoeda(input);
+});
 
 function salvarDadosStorage() {
     localStorage.setItem("clientes", JSON.stringify(clientes));
@@ -29,16 +129,10 @@ const pages = document.querySelectorAll(".page");
 menuItems.forEach(item => {
     item.addEventListener("click", function(event) {
         event.preventDefault();
-
-        menuItems.forEach(menu => {
-            menu.classList.remove("active");
-        });
-
+        menuItems.forEach(menu => menu.classList.remove("active"));
         this.classList.add("active");
 
-        pages.forEach(page => {
-            page.classList.add("hidden");
-        });
+        pages.forEach(page => page.classList.add("hidden"));
 
         const pageName = this.dataset.page;
         const selectedPage = document.getElementById("page-" + pageName);
@@ -55,36 +149,22 @@ menuItems.forEach(item => {
 // ==============================
 
 let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
-let clienteEditandoId = null;
 
 const btnNovoCliente = document.getElementById("btnNovoCliente");
 const modalCliente = document.getElementById("modalCliente");
 const fecharModal = document.getElementById("fecharModal");
 const cancelarCliente = document.getElementById("cancelarCliente");
 const salvarCliente = document.getElementById("salvarCliente");
-const editarCliente = document.getElementById("editarCliente");
 
 if (btnNovoCliente) {
     btnNovoCliente.addEventListener("click", function() {
-        clienteEditandoId = null;
         limparFormularioCliente();
-        document.querySelector("#modalCliente h2").textContent = "Novo cliente";
-        salvarCliente.textContent = "Salvar cliente";
         modalCliente.classList.remove("hidden");
     });
 }
 
-if (fecharModal) {
-    fecharModal.addEventListener("click", function() {
-        modalCliente.classList.add("hidden");
-    });
-}
-
-if (cancelarCliente) {
-    cancelarCliente.addEventListener("click", function() {
-        modalCliente.classList.add("hidden");
-    });
-}
+if (fecharModal) fecharModal.addEventListener("click", () => modalCliente.classList.add("hidden"));
+if (cancelarCliente) cancelarCliente.addEventListener("click", () => modalCliente.classList.add("hidden"));
 
 if (salvarCliente) {
     salvarCliente.addEventListener("click", function() {
@@ -99,32 +179,6 @@ if (salvarCliente) {
             return;
         }
 
-        if (clienteEditandoId !== null) {
-            const cliente = clientes.find(c => c.id === clienteEditandoId);
-
-            if (cliente) {
-                cliente.nome = nome;
-                cliente.telefone = telefone;
-                cliente.documento = documento;
-                cliente.endereco = endereco;
-                cliente.observacoes = observacoes;
-            }
-
-            salvarDadosStorage();
-            mostrarClientes();
-            mostrarObras();
-
-            modalCliente.classList.add("hidden");
-            clienteEditandoId = null;
-
-            document.querySelector("#modalCliente h2").textContent = "Novo cliente";
-            salvarCliente.textContent = "Salvar cliente";
-
-            limparFormularioCliente();
-            abrirCliente(cliente.id);
-            return;
-        }
-
         const cliente = {
             id: Date.now(),
             nome: nome,
@@ -136,8 +190,8 @@ if (salvarCliente) {
 
         clientes.push(cliente);
         salvarDadosStorage();
-
         mostrarClientes();
+        atualizarDashboard();
         modalCliente.classList.add("hidden");
         limparFormularioCliente();
     });
@@ -145,62 +199,31 @@ if (salvarCliente) {
 
 function mostrarClientes() {
     const tabela = document.getElementById("listaClientes");
+    const totalContador = document.getElementById("totalClientes");
     if (!tabela) return;
 
+    if (totalContador) totalContador.textContent = `${clientes.length} cliente${clientes.length !== 1 ? 's' : ''}`;
+
     tabela.innerHTML = "";
-
-    const clientesOrdenados = [...clientes].sort((a, b) =>
-        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
-    );
-
-    clientesOrdenados.forEach(cliente => {
+    clientes.forEach(cliente => {
         const linha = document.createElement("tr");
-
         linha.innerHTML = `
-            <td>
-                <button class="cliente-link" onclick="abrirCliente(${cliente.id})">
-                    ${cliente.nome}
-                </button>
-            </td>
+            <td><button class="cliente-link" onclick="abrirCliente(${cliente.id})" style="background:none; border:none; color:var(--primary-color, #2563eb); cursor:pointer; font-weight:600; padding:0;">${cliente.nome}</button></td>
             <td>${cliente.telefone || "-"}</td>
             <td>${cliente.documento || "-"}</td>
             <td>${cliente.endereco || "-"}</td>
-            <td>
-                <button class="secondary-button" onclick="excluirCliente(${cliente.id})">
-                    Excluir
-                </button>
-            </td>
+            <td><button class="secondary-button" onclick="excluirCliente(${cliente.id})">Excluir</button></td>
         `;
-
         tabela.appendChild(linha);
     });
-
-    atualizarTotalClientes();
 }
 
 function excluirCliente(id) {
-    const obrasVinculadas = obras.filter(obra => obra.clienteId === id);
-
-    if (obrasVinculadas.length > 0) {
-        alert("Não é possível excluir este cliente porque existem " + obrasVinculadas.length + " obra(s) vinculada(s) a ele.");
-        return;
-    }
-
-    if (!confirm("Deseja realmente excluir este cliente?")) {
-        return;
-    }
-
-    clientes = clientes.filter(cliente => cliente.id !== id);
+    if (!confirm("Deseja realmente excluir este cliente?")) return;
+    clientes = clientes.filter(c => c.id !== id);
     salvarDadosStorage();
     mostrarClientes();
-}
-
-function atualizarTotalClientes() {
-    const totalElement = document.getElementById("totalClientes");
-    if (totalElement) {
-        const total = clientes.length;
-        totalElement.textContent = total === 1 ? "1 cliente" : total + " clientes";
-    }
+    atualizarDashboard();
 }
 
 function limparFormularioCliente() {
@@ -211,81 +234,11 @@ function limparFormularioCliente() {
     document.getElementById("observacoesCliente").value = "";
 }
 
-// Máscaras automáticas
-const telefoneInput = document.getElementById("telefoneCliente");
-if (telefoneInput) {
-    telefoneInput.addEventListener("input", function() {
-        let numero = this.value.replace(/\D/g, "");
-        if (numero.length > 11) numero = numero.substring(0, 11);
-
-        if (numero.length <= 10) {
-            numero = numero.replace(/^(\d{2})(\d{0,4})(\d{0,4}).*/, function(_, ddd, p1, p2) {
-                let res = "";
-                if (ddd) res = "(" + ddd;
-                if (ddd.length === 2) res += ") ";
-                if (p1) res += p1;
-                if (p2) res += "-" + p2;
-                return res;
-            });
-        } else {
-            numero = numero.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, function(_, ddd, p1, p2) {
-                let res = "(" + ddd + ") " + p1;
-                if (p2) res += "-" + p2;
-                return res;
-            });
-        }
-        this.value = numero;
-    });
-}
-
-const documentoInput = document.getElementById("documentoCliente");
-if (documentoInput) {
-    documentoInput.addEventListener("input", function() {
-        let numero = this.value.replace(/\D/g, "");
-        if (numero.length > 14) numero = numero.substring(0, 14);
-
-        if (numero.length <= 11) {
-            numero = numero.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2}).*/, function(_, p1, p2, p3, p4) {
-                let res = p1;
-                if (p2) res += "." + p2;
-                if (p3) res += "." + p3;
-                if (p4) res += "-" + p4;
-                return res;
-            });
-        } else {
-            numero = numero.replace(/^(\d{2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2}).*/, function(_, p1, p2, p3, p4, p5) {
-                let res = p1;
-                if (p2) res += "." + p2;
-                if (p3) res += "." + p3;
-                if (p4) res += "/" + p4;
-                if (p5) res += "-" + p5;
-                return res;
-            });
-        }
-        this.value = numero;
-    });
-}
-
-const pesquisaCliente = document.getElementById("pesquisaCliente");
-if (pesquisaCliente) {
-    pesquisaCliente.addEventListener("input", function() {
-        const pesquisa = this.value.toLowerCase().trim();
-        const tabela = document.getElementById("listaClientes");
-        if (!tabela) return;
-        const linhas = tabela.querySelectorAll("tr");
-
-        linhas.forEach(linha => {
-            const texto = linha.textContent.toLowerCase();
-            linha.style.display = texto.includes(pesquisa) ? "" : "none";
-        });
-    });
-}
-
 function abrirCliente(id) {
     const cliente = clientes.find(c => c.id === id);
     if (!cliente) return;
 
-    pages.forEach(page => page.classList.add("hidden"));
+    pages.forEach(p => p.classList.add("hidden"));
     document.getElementById("page-ficha-cliente").classList.remove("hidden");
 
     document.getElementById("fichaNomeCliente").textContent = cliente.nome;
@@ -294,84 +247,29 @@ function abrirCliente(id) {
     document.getElementById("fichaEndereco").textContent = cliente.endereco || "-";
     document.getElementById("fichaObservacoes").textContent = cliente.observacoes || "Nenhuma observação.";
 
-    const obrasCliente = obras.filter(obra => obra.clienteId === cliente.id);
-    const containerObras = document.getElementById("obrasDoCliente");
-    containerObras.innerHTML = "";
-
-    if (obrasCliente.length === 0) {
-        containerObras.innerHTML = "<p>Nenhuma obra cadastrada para este cliente.</p>";
-    } else {
-        obrasCliente.forEach(obra => {
-            const obraDiv = document.createElement("div");
-            obraDiv.style.marginBottom = "18px";
-            obraDiv.innerHTML = `
-                <button class="cliente-link" onclick="abrirObra(${obra.id})">🏗️ ${obra.nome}</button>
-                <p style="margin: 6px 0; color: #94a3b8;">📍 ${obra.endereco || "Endereço não informado"}</p>
-                <p style="margin: 6px 0; color: #94a3b8;">💰 ${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                <p style="margin: 6px 0; color: #94a3b8;">📅 ${obra.dataInicio ? new Date(obra.dataInicio + "T00:00:00").toLocaleDateString("pt-BR") : "Data não informada"}</p>
-            `;
-            containerObras.appendChild(obraDiv);
-        });
-    }
-
-    const contratosCliente = contratos.filter(contrato => {
-        const obra = obras.find(o => o.id === contrato.obraId);
-        return obra && obra.clienteId === cliente.id;
-    });
-
-    const containerContratos = document.getElementById("contratosDoCliente");
-    containerContratos.innerHTML = "";
-
-    if (contratosCliente.length === 0) {
-        containerContratos.innerHTML = "<p>Nenhum contrato cadastrado para este cliente.</p>";
-    } else {
-        contratosCliente.forEach(contrato => {
-            const obra = obras.find(o => o.id === contrato.obraId);
-            const contratoDiv = document.createElement("div");
-            contratoDiv.style.marginBottom = "18px";
-            contratoDiv.innerHTML = `
-                <button class="cliente-link" onclick="abrirContrato(${contrato.id})">📄 ${contrato.nome}</button>
-                <p style="margin: 6px 0; color: #94a3b8;">🏗️ ${obra ? obra.nome : "Obra não encontrada"}</p>
-                <p style="margin: 6px 0; color: #94a3b8;">💰 ${Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-            `;
-            containerContratos.appendChild(contratoDiv);
-        });
+    // Renderizar Obras do Cliente
+    const divObrasCliente = document.getElementById("obrasDoCliente");
+    const obrasDoCli = obras.filter(o => o.clienteId === id);
+    if (divObrasCliente) {
+        if (obrasDoCli.length === 0) {
+            divObrasCliente.innerHTML = `<p>Nenhuma obra cadastrada para este cliente.</p>`;
+        } else {
+            divObrasCliente.innerHTML = obrasDoCli.map(o => `<p>🏗️ <strong>${o.nome}</strong> - R$ ${Number(o.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`).join('');
+        }
     }
 }
 
 const voltarClientes = document.getElementById("voltarClientes");
 if (voltarClientes) {
-    voltarClientes.addEventListener("click", function() {
+    voltarClientes.addEventListener("click", () => {
         document.getElementById("page-ficha-cliente").classList.add("hidden");
         document.getElementById("page-clientes").classList.remove("hidden");
-    });
-}
-
-if (editarCliente) {
-    editarCliente.addEventListener("click", function() {
-        const nome = document.getElementById("fichaNomeCliente").textContent;
-        const cliente = clientes.find(c => c.nome === nome);
-        if (!cliente) return;
-
-        clienteEditandoId = cliente.id;
-        document.getElementById("nomeCliente").value = cliente.nome;
-        document.getElementById("telefoneCliente").value = cliente.telefone || "";
-        document.getElementById("documentoCliente").value = cliente.documento || "";
-        document.getElementById("enderecoCliente").value = cliente.endereco || "";
-        document.getElementById("observacoesCliente").value = cliente.observacoes || "";
-
-        document.querySelector("#modalCliente h2").textContent = "Editar cliente";
-        salvarCliente.textContent = "Salvar alterações";
-
-        document.getElementById("page-ficha-cliente").classList.add("hidden");
-        document.getElementById("page-clientes").classList.remove("hidden");
-        modalCliente.classList.remove("hidden");
     });
 }
 
 
 // ==============================
-// GESTÃO DE OBRAS COM STATUS
+// GESTÃO DE OBRAS
 // ==============================
 
 let obras = JSON.parse(localStorage.getItem("obras")) || [];
@@ -380,15 +278,7 @@ const btnNovaObra = document.getElementById("btnNovaObra");
 const modalObra = document.getElementById("modalObra");
 const fecharModalObra = document.getElementById("fecharModalObra");
 const cancelarObra = document.getElementById("cancelarObra");
-const clienteObra = document.getElementById("clienteObra");
-const salvarObra = document.getElementById("salvarObra");
-
-const statusTags = {
-    planejamento: '<span class="badge badge-warning">📋 Planeamento</span>',
-    em_andamento: '<span class="badge badge-info">🏗️ Em Andamento</span>',
-    pausada: '<span class="badge badge-secondary">⏸️ Pausada</span>',
-    concluida: '<span class="badge badge-success">✅ Concluída</span>'
-};
+const salverObraBtn = document.getElementById("salvarObra");
 
 if (btnNovaObra) {
     btnNovaObra.addEventListener("click", function() {
@@ -398,33 +288,30 @@ if (btnNovaObra) {
     });
 }
 
-if (fecharModalObra) fecharModalObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
-if (cancelarObra) cancelarObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
+if (fecharModalObra) fecharModalObra.addEventListener("click", () => modalObra.classList.add("hidden"));
+if (cancelarObra) cancelarObra.addEventListener("click", () => modalObra.classList.add("hidden"));
 
 function carregarClientesNaObra() {
-    if (!clienteObra) return;
-    clienteObra.innerHTML = '<option value="">Selecione o cliente</option>';
-    clientes.forEach(cliente => {
-        const option = document.createElement("option");
-        option.value = cliente.id;
-        option.textContent = cliente.nome;
-        clienteObra.appendChild(option);
+    const select = document.getElementById("clienteObra");
+    if (!select) return;
+    select.innerHTML = '<option value="">Selecione o cliente</option>';
+    clientes.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
     });
 }
 
-if (salvarObra) {
-    salvarObra.addEventListener("click", function() {
+if (salverObraBtn) {
+    salverObraBtn.addEventListener("click", function() {
         const nome = document.getElementById("nomeObra").value.trim();
-        const clienteId = document.getElementById("clienteObra") ? document.getElementById("clienteObra").value : "";
+        const clienteId = document.getElementById("clienteObra").value;
         const endereco = document.getElementById("enderecoObra").value.trim();
         const dataInicio = document.getElementById("dataInicioObra").value;
-        const dataFim = document.getElementById("dataFimObra") ? document.getElementById("dataFimObra").value : "";
-        const status = document.getElementById("statusObra") ? document.getElementById("statusObra").value : "em_andamento";
+        const dataFim = document.getElementById("dataFimObra").value;
+        const status = document.getElementById("statusObra").value;
         const valorTexto = document.getElementById("valorObra").value;
-        const observacoes = document.getElementById("observacoesObra").value.trim();
+        const observacoes = document.getElementById("observacoesObra").value;
 
-        if (nome === "") { alert("Digite o nome da obra."); return; }
-        if (clienteId === "") { alert("Selecione o cliente."); return; }
+        if (!nome) { alert("Digite o nome da obra."); return; }
 
         const obra = {
             id: Date.now(),
@@ -441,7 +328,6 @@ if (salvarObra) {
         obras.push(obra);
         salvarDadosStorage();
         modalObra.classList.add("hidden");
-        limparFormularioObra();
         mostrarObras();
         atualizarDashboard();
     });
@@ -449,47 +335,39 @@ if (salvarObra) {
 
 function limparFormularioObra() {
     document.getElementById("nomeObra").value = "";
-    if (document.getElementById("clienteObra")) document.getElementById("clienteObra").value = "";
     document.getElementById("enderecoObra").value = "";
     document.getElementById("dataInicioObra").value = "";
-    if (document.getElementById("dataFimObra")) document.getElementById("dataFimObra").value = "";
-    if (document.getElementById("statusObra")) document.getElementById("statusObra").value = "em_andamento";
+    document.getElementById("dataFimObra").value = "";
     document.getElementById("valorObra").value = "";
     document.getElementById("observacoesObra").value = "";
 }
 
 function mostrarObras() {
     const tabela = document.getElementById("listaObras");
+    const totalContador = document.getElementById("totalObras");
     if (!tabela) return;
 
-    tabela.innerHTML = "";
-    const obrasOrdenadas = [...obras].sort((a, b) =>
-        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
-    );
+    if (totalContador) totalContador.textContent = `${obras.length} obra${obras.length !== 1 ? 's' : ''}`;
 
-    obrasOrdenadas.forEach(obra => {
+    tabela.innerHTML = "";
+    obras.forEach(obra => {
         const cliente = clientes.find(c => c.id === obra.clienteId);
         const linha = document.createElement("tr");
+        
+        let statusTexto = "Em Andamento";
+        if (obra.status === "planejamento") statusTexto = "Em Planejamento";
+        if (obra.status === "pausada") statusTexto = "Pausada";
+        if (obra.status === "concluida") statusTexto = "Concluída";
 
         linha.innerHTML = `
-            <td><button class="cliente-link" onclick="abrirObra(${obra.id})">${obra.nome}</button></td>
+            <td>${obra.nome}</td>
             <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${statusTags[obra.status] || statusTags.em_andamento}</td>
+            <td>${statusTexto}</td>
             <td>${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-            <td>
-                <button class="secondary-button" onclick="abrirObra(${obra.id})">Ver Ficha</button>
-                <button class="secondary-button" onclick="excluirObra(${obra.id})">Excluir</button>
-            </td>
+            <td><button class="secondary-button" onclick="excluirObra(${obra.id})">Excluir</button></td>
         `;
         tabela.appendChild(linha);
     });
-
-    atualizarTotalObras();
-}
-
-function atualizarTotalObras() {
-    const el = document.getElementById("totalObras");
-    if (el) el.textContent = obras.length === 1 ? "1 obra" : obras.length + " obras";
 }
 
 function excluirObra(id) {
@@ -500,99 +378,36 @@ function excluirObra(id) {
     atualizarDashboard();
 }
 
-const valorObraInput = document.getElementById("valorObra");
-if (valorObraInput) {
-    valorObraInput.addEventListener("input", function() {
-        let v = this.value.replace(/\D/g, "");
-        if (v === "") { this.value = ""; return; }
-        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    });
-}
-
-const pesquisaObra = document.getElementById("pesquisaObra");
-if (pesquisaObra) {
-    pesquisaObra.addEventListener("input", function() {
-        const pesquisa = this.value.toLowerCase().trim();
-        const tabela = document.getElementById("listaObras");
-        if (!tabela) return;
-        tabela.querySelectorAll("tr").forEach(linha => {
-            linha.style.display = linha.textContent.toLowerCase().includes(pesquisa) ? "" : "none";
-        });
-    });
-}
-
-function abrirObra(id) {
-    const obra = obras.find(o => o.id === id);
-    if (!obra) return;
-
-    pages.forEach(p => p.classList.add("hidden"));
-    document.getElementById("page-ficha-obra").classList.remove("hidden");
-
-    document.getElementById("fichaNomeObra").textContent = obra.nome;
-    const cliente = clientes.find(c => c.id === obra.clienteId);
-    document.getElementById("fichaClienteObra").innerHTML = cliente
-        ? `<button class="cliente-link" onclick="abrirCliente(${cliente.id})">${cliente.nome}</button>`
-        : "-";
-    document.getElementById("fichaEnderecoObra").textContent = obra.endereco || "-";
-    document.getElementById("fichaDataObra").textContent = obra.dataInicio ? new Date(obra.dataInicio + "T00:00:00").toLocaleDateString("pt-BR") : "-";
-    document.getElementById("fichaValorObra").textContent = Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    document.getElementById("fichaObservacoesObra").textContent = obra.observacoes || "Nenhuma observação.";
-}
-
-const voltarObras = document.getElementById("voltarObras");
-if (voltarObras) {
-    voltarObras.addEventListener("click", function() {
-        document.getElementById("page-ficha-obra").classList.add("hidden");
-        document.getElementById("page-obras").classList.remove("hidden");
-    });
-}
-
 
 // ==============================
 // CONTRATOS
 // ==============================
 
 let contratos = JSON.parse(localStorage.getItem("contratos")) || [];
-let contratoEditandoId = null;
 
 const btnNovoContrato = document.getElementById("btnNovoContrato");
 const modalContrato = document.getElementById("modalContrato");
 const fecharModalContrato = document.getElementById("fecharModalContrato");
 const cancelarContrato = document.getElementById("cancelarContrato");
-const obraContrato = document.getElementById("obraContrato");
 const salvarContrato = document.getElementById("salvarContrato");
 
 if (btnNovoContrato) {
     btnNovoContrato.addEventListener("click", function() {
-        contratoEditandoId = null;
         carregarObrasNoContrato();
         limparFormularioContrato();
-        document.querySelector("#modalContrato h2").textContent = "Novo contrato";
-        salvarContrato.textContent = "Salvar contrato";
         modalContrato.classList.remove("hidden");
     });
 }
 
-if (fecharModalContrato) fecharModalContrato.addEventListener("click", function() { modalContrato.classList.add("hidden"); });
-if (cancelarContrato) cancelarContrato.addEventListener("click", function() { modalContrato.classList.add("hidden"); });
+if (fecharModalContrato) fecharModalContrato.addEventListener("click", () => modalContrato.classList.add("hidden"));
+if (cancelarContrato) cancelarContrato.addEventListener("click", () => modalContrato.classList.add("hidden"));
 
 function carregarObrasNoContrato() {
-    if (!obraContrato) return;
-    obraContrato.innerHTML = '<option value="">Selecione a obra</option>';
-    obras.forEach(obra => {
-        const option = document.createElement("option");
-        option.value = obra.id;
-        option.textContent = obra.nome;
-        obraContrato.appendChild(option);
-    });
-}
-
-const valorContratoInput = document.getElementById("valorContrato");
-if (valorContratoInput) {
-    valorContratoInput.addEventListener("input", function() {
-        let v = this.value.replace(/\D/g, "");
-        if (v === "") { this.value = ""; return; }
-        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const select = document.getElementById("obraContrato");
+    if (!select) return;
+    select.innerHTML = '<option value="">Selecione a obra</option>';
+    obras.forEach(o => {
+        select.innerHTML += `<option value="${o.id}">${o.nome}</option>`;
     });
 }
 
@@ -602,65 +417,48 @@ if (salvarContrato) {
         const obraId = document.getElementById("obraContrato").value;
         const data = document.getElementById("dataContrato").value;
         const valorTexto = document.getElementById("valorContrato").value;
-        const observacoes = document.getElementById("observacoesContrato").value.trim();
+        const observacoes = document.getElementById("observacoesContrato").value;
 
-        if (nome === "") { alert("Digite o nome do contrato."); return; }
+        if (!nome) { alert("Digite o nome do contrato."); return; }
 
-        const valor = converterMoedaParaNumero(valorTexto);
+        const contrato = {
+            id: Date.now(),
+            nome: nome,
+            obraId: Number(obraId),
+            data: data,
+            valor: converterMoedaParaNumero(valorTexto),
+            observacoes: observacoes
+        };
 
-        if (contratoEditandoId !== null) {
-            const contrato = contratos.find(c => c.id === contratoEditandoId);
-            if (contrato) {
-                contrato.nome = nome;
-                contrato.obraId = Number(obraId);
-                contrato.data = data;
-                contrato.valor = valor;
-                contrato.observacoes = observacoes;
-            }
-            contratoEditandoId = null;
-        } else {
-            const contrato = {
-                id: Date.now(),
-                nome: nome,
-                obraId: Number(obraId),
-                data: data,
-                valor: valor,
-                observacoes: observacoes
-            };
-            contratos.push(contrato);
-        }
-
+        contratos.push(contrato);
         salvarDadosStorage();
         modalContrato.classList.add("hidden");
-        limparFormularioContrato();
         mostrarContratos();
     });
 }
 
 function limparFormularioContrato() {
     document.getElementById("nomeContrato").value = "";
-    document.getElementById("obraContrato").value = "";
     document.getElementById("dataContrato").value = "";
     document.getElementById("valorContrato").value = "";
     document.getElementById("observacoesContrato").value = "";
 }
 
-function mostrarContratos(lista = contratos) {
+function mostrarContratos() {
     const tabela = document.getElementById("listaContratos");
+    const totalContador = document.getElementById("totalContratos");
     if (!tabela) return;
 
-    tabela.innerHTML = "";
-    const ordenados = [...lista].sort((a, b) =>
-        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
-    );
+    if (totalContador) totalContador.textContent = `${contratos.length} contrato${contratos.length !== 1 ? 's' : ''}`;
 
-    ordenados.forEach(contrato => {
+    tabela.innerHTML = "";
+    contratos.forEach(contrato => {
         const obra = obras.find(o => o.id === contrato.obraId);
         const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
-
+        
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td><button class="cliente-link" onclick="abrirContrato(${contrato.id})">${contrato.nome}</button></td>
+            <td>${contrato.nome}</td>
             <td>${obra ? obra.nome : "-"}</td>
             <td>${cliente ? cliente.nome : "-"}</td>
             <td>${Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
@@ -668,13 +466,6 @@ function mostrarContratos(lista = contratos) {
         `;
         tabela.appendChild(linha);
     });
-
-    atualizarTotalContratos();
-}
-
-function atualizarTotalContratos() {
-    const el = document.getElementById("totalContratos");
-    if (el) el.textContent = contratos.length === 1 ? "1 contrato" : contratos.length + " contratos";
 }
 
 function excluirContrato(id) {
@@ -684,58 +475,9 @@ function excluirContrato(id) {
     mostrarContratos();
 }
 
-function abrirContrato(id) {
-    const contrato = contratos.find(c => c.id === id);
-    if (!contrato) return;
-
-    contratoEditandoId = contrato.id;
-    pages.forEach(p => p.classList.add("hidden"));
-    document.getElementById("page-ficha-contrato").classList.remove("hidden");
-
-    document.getElementById("fichaNomeContrato").textContent = contrato.nome;
-    const obra = obras.find(o => o.id === contrato.obraId);
-    const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
-
-    document.getElementById("fichaObraContrato").innerHTML = obra ? `<button class="cliente-link" onclick="abrirObra(${obra.id})">${obra.nome}</button>` : "-";
-    document.getElementById("fichaClienteContrato").innerHTML = cliente ? `<button class="cliente-link" onclick="abrirCliente(${cliente.id})">${cliente.nome}</button>` : "-";
-    document.getElementById("fichaDataContrato").textContent = contrato.data ? new Date(contrato.data + "T00:00:00").toLocaleDateString("pt-BR") : "-";
-    document.getElementById("fichaValorContrato").textContent = Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    document.getElementById("fichaObservacoesContrato").textContent = contrato.observacoes || "Nenhuma observação.";
-}
-
-const editarContrato = document.getElementById("editarContrato");
-if (editarContrato) {
-    editarContrato.addEventListener("click", function() {
-        const contrato = contratos.find(c => c.id === contratoEditandoId);
-        if (!contrato) return;
-
-        carregarObrasNoContrato();
-        document.getElementById("nomeContrato").value = contrato.nome;
-        document.getElementById("obraContrato").value = contrato.obraId;
-        document.getElementById("dataContrato").value = contrato.data;
-        document.getElementById("valorContrato").value = Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-        document.getElementById("observacoesContrato").value = contrato.observacoes || "";
-
-        document.querySelector("#modalContrato h2").textContent = "Editar contrato";
-        salvarContrato.textContent = "Salvar alterações";
-
-        document.getElementById("page-ficha-contrato").classList.add("hidden");
-        document.getElementById("page-contratos").classList.remove("hidden");
-        modalContrato.classList.remove("hidden");
-    });
-}
-
-const voltarContratos = document.getElementById("voltarContratos");
-if (voltarContratos) {
-    voltarContratos.addEventListener("click", function() {
-        document.getElementById("page-ficha-contrato").classList.add("hidden");
-        document.getElementById("page-contratos").classList.remove("hidden");
-    });
-}
-
 
 // ==============================
-// LANÇAMENTOS (FINANCEIRO)
+// FINANCEIRO
 // ==============================
 
 let lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
@@ -745,35 +487,24 @@ const modalLancamento = document.getElementById("modalLancamento");
 const fecharModalLancamento = document.getElementById("fecharModalLancamento");
 const cancelarLancamento = document.getElementById("cancelarLancamento");
 const salvarLancamento = document.getElementById("salvarLancamento");
-const obraLancamento = document.getElementById("obraLancamento");
 
 if (btnNovoLancamento) {
     btnNovoLancamento.addEventListener("click", function() {
-        carregarObrasNoLancamento();
+        carregarObrasNoFinanceiro();
+        limparFormularioLancamento();
         modalLancamento.classList.remove("hidden");
     });
 }
 
-if (fecharModalLancamento) fecharModalLancamento.addEventListener("click", function() { modalLancamento.classList.add("hidden"); });
-if (cancelarLancamento) cancelarLancamento.addEventListener("click", function() { modalLancamento.classList.add("hidden"); });
+if (fecharModalLancamento) fecharModalLancamento.addEventListener("click", () => modalLancamento.classList.add("hidden"));
+if (cancelarLancamento) cancelarLancamento.addEventListener("click", () => modalLancamento.classList.add("hidden"));
 
-function carregarObrasNoLancamento() {
-    if (!obraLancamento) return;
-    obraLancamento.innerHTML = '<option value="geral">🏢 Geral / Caixa</option>';
-    obras.forEach(obra => {
-        const option = document.createElement("option");
-        option.value = obra.id;
-        option.textContent = obra.nome;
-        obraLancamento.appendChild(option);
-    });
-}
-
-const valorLancamentoInput = document.getElementById("valorLancamento");
-if (valorLancamentoInput) {
-    valorLancamentoInput.addEventListener("input", function() {
-        let v = this.value.replace(/\D/g, "");
-        if (v === "") { this.value = ""; return; }
-        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function carregarObrasNoFinanceiro() {
+    const select = document.getElementById("obraLancamento");
+    if (!select) return;
+    select.innerHTML = '<option value="geral">🏢 Geral / Caixa</option>';
+    obras.forEach(o => {
+        select.innerHTML += `<option value="${o.id}">🏗️ ${o.nome}</option>`;
     });
 }
 
@@ -781,25 +512,19 @@ if (salvarLancamento) {
     salvarLancamento.addEventListener("click", function() {
         const descricao = document.getElementById("descricaoLancamento").value.trim();
         const tipo = document.getElementById("tipoLancamento").value;
-        const obraId = document.getElementById("obraLancamento").value;
         const data = document.getElementById("dataLancamento").value;
+        const obraId = document.getElementById("obraLancamento").value;
         const valorTexto = document.getElementById("valorLancamento").value;
-        const observacoes = document.getElementById("observacoesLancamento").value.trim();
 
-        if (descricao === "") { alert("Digite a descrição do lançamento."); return; }
-        if (obraId === "") { alert("Selecione a obra."); return; }
-        if (valorTexto === "") { alert("Digite o valor."); return; }
-
-        const valor = converterMoedaParaNumero(valorTexto);
+        if (!descricao) { alert("Digite a descrição do lançamento."); return; }
 
         const lancamento = {
             id: Date.now(),
             descricao: descricao,
             tipo: tipo,
-            obraId: obraId === "geral" ? "geral" : Number(obraId),
             data: data,
-            valor: valor,
-            observacoes: observacoes
+            obraId: obraId,
+            valor: converterMoedaParaNumero(valorTexto)
         };
 
         lancamentos.push(lancamento);
@@ -813,65 +538,50 @@ if (salvarLancamento) {
 
 function limparFormularioLancamento() {
     document.getElementById("descricaoLancamento").value = "";
-    document.getElementById("tipoLancamento").value = "receita";
-    document.getElementById("obraLancamento").value = "geral";
     document.getElementById("dataLancamento").value = "";
     document.getElementById("valorLancamento").value = "";
-    document.getElementById("observacoesLancamento").value = "";
 }
 
-function mostrarLancamentos(lista = lancamentos) {
+function mostrarLancamentos() {
     const tabela = document.getElementById("listaLancamentos");
+    const totalContador = document.getElementById("totalLancamentos");
     if (!tabela) return;
 
-    tabela.innerHTML = "";
-    const ordenados = [...lista].sort((a, b) =>
-        String(a.descricao || "").localeCompare(String(b.descricao || ""), "pt-BR", { sensitivity: "base" })
-    );
+    if (totalContador) totalContador.textContent = `${lancamentos.length} lançamento${lancamentos.length !== 1 ? 's' : ''}`;
 
-    ordenados.forEach(lancamento => {
-        const obra = obras.find(o => o.id === Number(lancamento.obraId));
+    tabela.innerHTML = "";
+    
+    let totalRec = 0;
+    let totalDesp = 0;
+
+    lancamentos.forEach(l => {
+        const val = Number(l.valor || 0);
+        if (l.tipo === "receita") totalRec += val;
+        else totalDesp += val;
+
+        const obra = obras.find(o => o.id == l.obraId);
         const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
-        let destino = (lancamento.obraId !== "geral" && obra) ? "🏗️ " + obra.nome : "🏢 Geral / Caixa";
 
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>${lancamento.descricao}</td>
-            <td>${lancamento.tipo === "receita" ? "Receita" : "Despesa"}</td>
-            <td>${destino}</td>
+            <td>${l.descricao}</td>
+            <td>${l.tipo === "receita" ? "🟢 Receita" : "🔴 Despesa"}</td>
+            <td>${obra ? obra.nome : "Geral"}</td>
             <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${Number(lancamento.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-            <td>${lancamento.data ? new Date(lancamento.data + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</td>
-            <td><button class="secondary-button" onclick="excluirLancamento(${lancamento.id})">Excluir</button></td>
+            <td>${val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td>${l.data || "-"}</td>
+            <td><button class="secondary-button" onclick="excluirLancamento(${l.id})">Excluir</button></td>
         `;
         tabela.appendChild(linha);
     });
 
-    atualizarTotalLancamentos();
-}
+    const elTotRec = document.getElementById("totalReceitas");
+    const elTotDesp = document.getElementById("totalDespesas");
+    const elSaldoFin = document.getElementById("saldoFinanceiro");
 
-function atualizarTotalLancamentos() {
-    const el = document.getElementById("totalLancamentos");
-    if (el) el.textContent = lancamentos.length === 1 ? "1 lançamento" : lancamentos.length + " lançamentos";
-
-    let receitas = 0;
-    let despesas = 0;
-
-    lancamentos.forEach(l => {
-        const v = Number(l.valor || 0);
-        if (l.tipo === "receita") receitas += v;
-        if (l.tipo === "despesa") despesas += v;
-    });
-
-    const saldo = receitas - despesas;
-
-    const elRec = document.getElementById("totalReceitas");
-    const elDes = document.getElementById("totalDespesas");
-    const elSal = document.getElementById("saldoFinanceiro");
-
-    if (elRec) elRec.textContent = receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    if (elDes) elDes.textContent = despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    if (elSal) elSal.textContent = saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elTotRec) elTotRec.textContent = totalRec.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elTotDesp) elTotDesp.textContent = totalDesp.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elSaldoFin) elSaldoFin.textContent = (totalRec - totalDesp).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function excluirLancamento(id) {
@@ -884,7 +594,7 @@ function excluirLancamento(id) {
 
 
 // ==============================
-// MATERIAIS E ESTOQUE
+// ESTOQUE
 // ==============================
 
 let materiais = JSON.parse(localStorage.getItem("materiais")) || [];
@@ -895,18 +605,15 @@ const fecharModalMaterial = document.getElementById("fecharModalMaterial");
 const cancelarMaterial = document.getElementById("cancelarMaterial");
 const salvarMaterial = document.getElementById("salvarMaterial");
 
-if (btnNovoMaterial) btnNovoMaterial.addEventListener("click", () => modalMaterial.classList.remove("hidden"));
-if (fecharModalMaterial) fecharModalMaterial.addEventListener("click", () => modalMaterial.classList.add("hidden"));
-if (cancelarMaterial) cancelarMaterial.addEventListener("click", () => modalMaterial.classList.add("hidden"));
-
-const precoMaterialInput = document.getElementById("precoMaterial");
-if (precoMaterialInput) {
-    precoMaterialInput.addEventListener("input", function() {
-        let v = this.value.replace(/\D/g, "");
-        if (v === "") { this.value = ""; return; }
-        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+if (btnNovoMaterial) {
+    btnNovoMaterial.addEventListener("click", function() {
+        limparFormularioMaterial();
+        modalMaterial.classList.remove("hidden");
     });
 }
+
+if (fecharModalMaterial) fecharModalMaterial.addEventListener("click", () => modalMaterial.classList.add("hidden"));
+if (cancelarMaterial) cancelarMaterial.addEventListener("click", () => modalMaterial.classList.add("hidden"));
 
 if (salvarMaterial) {
     salvarMaterial.addEventListener("click", function() {
@@ -916,18 +623,15 @@ if (salvarMaterial) {
         const quantidade = document.getElementById("quantidadeMaterial").value;
         const precoTexto = document.getElementById("precoMaterial").value;
 
-        if (nome === "") { alert("Digite o nome do material."); return; }
-        if (quantidade === "") { alert("Digite a quantidade."); return; }
-
-        const preco = converterMoedaParaNumero(precoTexto);
+        if (!nome) { alert("Digite o nome do material."); return; }
 
         const material = {
             id: Date.now(),
             nome: nome,
             categoria: categoria,
             unidade: unidade,
-            quantidade: Number(quantidade),
-            preco: preco
+            quantidade: Number(quantidade) || 0,
+            preco: converterMoedaParaNumero(precoTexto)
         };
 
         materiais.push(material);
@@ -941,41 +645,30 @@ if (salvarMaterial) {
 function limparFormularioMaterial() {
     document.getElementById("nomeMaterial").value = "";
     document.getElementById("categoriaMaterial").value = "";
-    document.getElementById("unidadeMaterial").value = "un";
     document.getElementById("quantidadeMaterial").value = "";
     document.getElementById("precoMaterial").value = "";
 }
 
 function mostrarMateriais() {
     const tabela = document.getElementById("listaMateriais");
+    const totalContador = document.getElementById("totalMateriais");
     if (!tabela) return;
 
-    tabela.innerHTML = "";
-    const ordenados = [...materiais].sort((a, b) =>
-        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
-    );
+    if (totalContador) totalContador.textContent = `${materiais.length} material${materiais.length !== 1 ? 'is' : ''}`;
 
-    ordenados.forEach(material => {
+    tabela.innerHTML = "";
+    materiais.forEach(m => {
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>${material.nome}</td>
-            <td>${material.categoria || "-"}</td>
-            <td>${material.quantidade}</td>
-            <td>${material.unidade}</td>
-            <td>${Number(material.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-            <td>
-                <button class="secondary-button" onclick="excluirMaterial(${material.id})">Excluir</button>
-            </td>
+            <td>${m.nome}</td>
+            <td>${m.categoria || "-"}</td>
+            <td>${m.quantidade}</td>
+            <td>${m.unidade || "un"}</td>
+            <td>${Number(m.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td><button class="secondary-button" onclick="excluirMaterial(${m.id})">Excluir</button></td>
         `;
         tabela.appendChild(linha);
     });
-
-    atualizarTotalMateriais();
-}
-
-function atualizarTotalMateriais() {
-    const el = document.getElementById("totalMateriais");
-    if (el) el.textContent = materiais.length === 1 ? "1 material" : materiais.length + " materiais";
 }
 
 function excluirMaterial(id) {
@@ -1000,7 +693,8 @@ const salvarCompra = document.getElementById("salvarCompra");
 
 if (btnNovaCompra) {
     btnNovaCompra.addEventListener("click", function() {
-        preencherMateriaisCompra();
+        carregarMateriaisNaCompra();
+        limparFormularioCompra();
         modalCompra.classList.remove("hidden");
     });
 }
@@ -1008,34 +702,12 @@ if (btnNovaCompra) {
 if (fecharModalCompra) fecharModalCompra.addEventListener("click", () => modalCompra.classList.add("hidden"));
 if (cancelarCompra) cancelarCompra.addEventListener("click", () => modalCompra.classList.add("hidden"));
 
-function preencherMateriaisCompra() {
+function carregarMateriaisNaCompra() {
     const select = document.getElementById("materialCompra");
     if (!select) return;
-
-    select.innerHTML = '<option value="">Selecione o material</option>';
-    const ordenados = [...materiais].sort((a, b) =>
-        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
-    );
-
-    ordenados.forEach(material => {
-        const option = document.createElement("option");
-        option.value = material.id;
-        option.textContent = material.nome;
-        select.appendChild(option);
-    });
-
-    const optionOutros = document.createElement("option");
-    optionOutros.value = "outros";
-    optionOutros.textContent = "Outros";
-    select.appendChild(optionOutros);
-}
-
-const valorCompra = document.getElementById("valorCompra");
-if (valorCompra) {
-    valorCompra.addEventListener("input", function() {
-        let v = this.value.replace(/\D/g, "");
-        if (v === "") { this.value = ""; return; }
-        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    select.innerHTML = '<option value="">Selecione o material</option><option value="outros">Outros</option>';
+    materiais.forEach(m => {
+        select.innerHTML += `<option value="${m.id}">${m.nome}</option>`;
     });
 }
 
@@ -1047,106 +719,57 @@ if (salvarCompra) {
         const quantidade = document.getElementById("quantidadeCompra").value;
         const valorTexto = document.getElementById("valorCompra").value;
         const data = document.getElementById("dataCompra").value;
-        const observacoes = document.getElementById("observacoesCompra").value.trim();
 
-        if (nome === "") { alert("Digite o nome da compra."); return; }
-        if (materialId === "") { alert("Selecione o material."); return; }
-        if (quantidade === "" || Number(quantidade) <= 0) { alert("Digite uma quantidade válida."); return; }
-        if (valorTexto === "") { alert("Digite o valor."); return; }
-
-        const valor = converterMoedaParaNumero(valorTexto);
-
-        if (isNaN(valor) || valor <= 0) {
-            alert("Digite um valor válido.");
-            return;
-        }
+        if (!nome) { alert("Digite o nome da compra."); return; }
 
         const compra = {
             id: Date.now(),
             nome: nome,
             fornecedor: fornecedor,
-            materialId: materialId === "outros" ? "outros" : Number(materialId),
-            quantidade: Number(quantidade),
-            valor: valor,
-            data: data,
-            observacoes: observacoes
+            materialId: materialId,
+            quantidade: Number(quantidade) || 0,
+            valor: converterMoedaParaNumero(valorTexto),
+            data: data
         };
 
         compras.push(compra);
-
-        if (materialId !== "outros") {
-            const material = materiais.find(m => m.id === Number(materialId));
-            if (material) {
-                material.quantidade = Number(material.quantidade || 0) + Number(quantidade);
-            }
-        }
-
-        const novoLancamento = {
-            id: Date.now() + 1,
-            descricao: "Compra: " + nome,
-            tipo: "despesa",
-            valor: valor,
-            data: data,
-            obraId: "geral",
-            observacoes: fornecedor ? "Fornecedor: " + fornecedor + (observacoes ? " | " + observacoes : "") : observacoes
-        };
-
-        lancamentos.push(novoLancamento);
         salvarDadosStorage();
-
-        mostrarCompras();
-        mostrarMateriais();
-        mostrarLancamentos();
-        atualizarDashboard();
-
         modalCompra.classList.add("hidden");
         limparFormularioCompra();
-
-        alert("Compra cadastrada!\n\n✓ Estoque atualizado\n✓ Despesa lançada no Financeiro");
+        mostrarCompras();
     });
 }
 
 function limparFormularioCompra() {
     document.getElementById("nomeCompra").value = "";
     document.getElementById("fornecedorCompra").value = "";
-    document.getElementById("materialCompra").value = "";
     document.getElementById("quantidadeCompra").value = "";
     document.getElementById("valorCompra").value = "";
     document.getElementById("dataCompra").value = "";
-    document.getElementById("observacoesCompra").value = "";
 }
 
-function mostrarCompras(lista = compras) {
+function mostrarCompras() {
     const tabela = document.getElementById("listaCompras");
+    const totalContador = document.getElementById("totalCompras");
     if (!tabela) return;
 
+    if (totalContador) totalContador.textContent = `${compras.length} compra${compras.length !== 1 ? 's' : ''}`;
+
     tabela.innerHTML = "";
-    const ordenadas = [...lista].sort((a, b) =>
-        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
-    );
-
-    ordenadas.forEach(compra => {
-        const material = materiais.find(m => m.id === Number(compra.materialId));
+    compras.forEach(c => {
+        const mat = materiais.find(m => m.id == c.materialId);
         const linha = document.createElement("tr");
-
         linha.innerHTML = `
-            <td>${compra.nome}</td>
-            <td>${compra.fornecedor || "-"}</td>
-            <td>${material ? material.nome : "-"}</td>
-            <td>${compra.quantidade}</td>
-            <td>${Number(compra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-            <td>${compra.data ? new Date(compra.data + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</td>
-            <td><button class="secondary-button" onclick="excluirCompra(${compra.id})">Excluir</button></td>
+            <td>${c.nome}</td>
+            <td>${c.fornecedor || "-"}</td>
+            <td>${mat ? mat.nome : "Outros"}</td>
+            <td>${c.quantidade}</td>
+            <td>${Number(c.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td>${c.data || "-"}</td>
+            <td><button class="secondary-button" onclick="excluirCompra(${c.id})">Excluir</button></td>
         `;
         tabela.appendChild(linha);
     });
-
-    atualizarTotalCompras();
-}
-
-function atualizarTotalCompras() {
-    const el = document.getElementById("totalCompras");
-    if (el) el.textContent = compras.length === 1 ? "1 compra" : compras.length + " compras";
 }
 
 function excluirCompra(id) {
@@ -1158,82 +781,17 @@ function excluirCompra(id) {
 
 
 // ==============================
-// AUTENTICAÇÃO E LOGIN
-// ==============================
-
-const usuarioCorreto = "ADM";
-const senhaCorreta = "ADM";
-
-const telaLogin = document.getElementById("telaLogin");
-const loginUsuario = document.getElementById("loginUsuario");
-const loginSenha = document.getElementById("loginSenha");
-const btnLogin = document.getElementById("btnLogin");
-const erroLogin = document.getElementById("erroLogin");
-
-function fazerLogin() {
-    if (!loginUsuario || !loginSenha) return;
-
-    const usuario = loginUsuario.value.trim();
-    const senha = loginSenha.value;
-
-    if (usuario === usuarioCorreto && senha === senhaCorreta) {
-        localStorage.setItem("gestorObraLogado", "true");
-        if (telaLogin) telaLogin.classList.add("hidden");
-
-        pages.forEach(p => p.classList.add("hidden"));
-        const dashPage = document.getElementById("page-dashboard");
-        if (dashPage) dashPage.classList.remove("hidden");
-
-        menuItems.forEach(m => m.classList.remove("active"));
-        const dashMenu = document.querySelector('[data-page="dashboard"]');
-        if (dashMenu) dashMenu.classList.add("active");
-
-        if (erroLogin) erroLogin.classList.add("hidden");
-        loginUsuario.value = "";
-        loginSenha.value = "";
-
-        atualizarDashboard();
-    } else {
-        if (erroLogin) erroLogin.classList.remove("hidden");
-        loginSenha.value = "";
-        loginSenha.focus();
-    }
-}
-
-if (btnLogin) btnLogin.addEventListener("click", fazerLogin);
-
-if (loginSenha) {
-    loginSenha.addEventListener("keydown", function(event) {
-        if (event.key === "Enter") fazerLogin();
-    });
-}
-
-if (localStorage.getItem("gestorObraLogado") === "true") {
-    if (telaLogin) telaLogin.classList.add("hidden");
-} else {
-    if (telaLogin) telaLogin.classList.remove("hidden");
-}
-
-const btnSair = document.getElementById("btnSair");
-if (btnSair) {
-    btnSair.addEventListener("click", function(event) {
-        event.preventDefault();
-        localStorage.removeItem("gestorObraLogado");
-        if (telaLogin) telaLogin.classList.remove("hidden");
-        if (loginUsuario) loginUsuario.value = "";
-        if (loginSenha) loginSenha.value = "";
-    });
-}
-
-
-// ==============================
-// DASHBOARD E INDICADORES
+// DASHBOARD
 // ==============================
 
 function atualizarDashboard() {
-    const obrasAtivas = obras.filter(o => !o.status || o.status === "em_andamento" || o.status === "planejamento").length;
+    // Total de Clientes
+    const elTotalClientes = document.getElementById("dashTotalClientes");
+    if (elTotalClientes) elTotalClientes.textContent = clientes.length;
+
+    // Obras Ativas
     const elObrasAtivas = document.getElementById("dashObrasAtivas");
-    if (elObrasAtivas) elObrasAtivas.textContent = obrasAtivas;
+    if (elObrasAtivas) elObrasAtivas.textContent = obras.length;
 
     let totalReceitas = 0;
     let totalDespesas = 0;
@@ -1244,63 +802,44 @@ function atualizarDashboard() {
         if (l.tipo === "despesa") totalDespesas += valor;
     });
 
-    const saldoGeral = totalReceitas - totalDespesas;
-
+    const elReceitas = document.getElementById("dashTotalReceitas");
+    const elDespesas = document.getElementById("dashTotalDespesas");
     const elSaldoGeral = document.getElementById("dashSaldoGeral");
-    const elTotalReceitas = document.getElementById("dashTotalReceitas");
-    const elTotalDespesas = document.getElementById("dashTotalDespesas");
 
-    if (elSaldoGeral) elSaldoGeral.textContent = saldoGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    if (elTotalReceitas) elTotalReceitas.textContent = totalReceitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    if (elTotalDespesas) elTotalDespesas.textContent = totalDespesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elReceitas) elReceitas.textContent = totalReceitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elDespesas) elDespesas.textContent = totalDespesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elSaldoGeral) elSaldoGeral.textContent = (totalReceitas - totalDespesas).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-    mostrarResumoObrasDashboard();
-}
-
-function mostrarResumoObrasDashboard() {
-    const container = document.getElementById("dashListaObrasRecentes");
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    if (obras.length === 0) {
-        container.innerHTML = "<p style='color: #94a3b8;'>Nenhuma obra cadastrada até o momento.</p>";
-        return;
+    // Resumo das Últimas Obras no Dashboard
+    const listaObrasRecentes = document.getElementById("dashListaObrasRecentes");
+    if (listaObrasRecentes) {
+        if (obras.length === 0) {
+            listaObrasRecentes.innerHTML = `<p style="color: #94a3b8;">Nenhuma obra cadastrada até o momento.</p>`;
+        } else {
+            listaObrasRecentes.innerHTML = obras.slice(-5).reverse().map(obra => {
+                const cliente = clientes.find(c => c.id === obra.clienteId);
+                return `
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <strong>${obra.nome}</strong>
+                            <div style="font-size: 13px; color: #94a3b8;">Cliente: ${cliente ? cliente.nome : 'Não vinculado'}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-weight: 600; color: #34d399;">${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
     }
-
-    const ultimasObras = [...obras].reverse().slice(0, 5);
-
-    ultimasObras.forEach(obra => {
-        const cliente = clientes.find(c => c.id === obra.clienteId);
-        
-        const lancamentosObra = lancamentos.filter(l => Number(l.obraId) === obra.id);
-        const receitasObra = lancamentosObra.filter(l => l.tipo === "receita").reduce((acc, l) => acc + Number(l.valor || 0), 0);
-        const despesasObra = lancamentosObra.filter(l => l.tipo === "despesa").reduce((acc, l) => acc + Number(l.valor || 0), 0);
-        const saldoObra = receitasObra - despesasObra;
-
-        const card = document.createElement("div");
-        card.className = "card-resumo-obra";
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <strong>🏗️ ${obra.nome}</strong>
-                <span style="font-size: 0.85rem; color: #94a3b8;">${cliente ? cliente.nome : "Cliente não informado"}</span>
-            </div>
-            <div style="display: flex; gap: 15px; font-size: 0.9rem; color: #cbd5e1;">
-                <span>Orçamento: <strong>${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></span>
-                <span>Gasto Realizado: <strong style="color: #ef4444;">${despesasObra.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></span>
-                <span>Saldo da Obra: <strong style="color: ${saldoObra >= 0 ? '#10b981' : '#ef4444'};">${saldoObra.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></span>
-            </div>
-        `;
-
-        container.appendChild(card);
-    });
 }
 
 
 // ==============================
-// INICIALIZAÇÃO DAS LISTAS E DASHBOARD
+// INICIALIZAÇÃO GERAL
 // ==============================
 
+verificarAutenticacao();
 mostrarClientes();
 mostrarObras();
 mostrarContratos();
