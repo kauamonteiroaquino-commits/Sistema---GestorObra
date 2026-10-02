@@ -42,15 +42,12 @@ a {
 .sidebar {
     width: 250px;
     min-height: 100vh;
-
     background: #0f172a;
-
     border-right: 1px solid #1e293b;
-
     display: flex;
     flex-direction: column;
-
     padding: 24px 16px;
+    flex-shrink: 0;
 }
 
 
@@ -60,13 +57,10 @@ a {
     display: flex;
     align-items: center;
     gap: 10px;
-
     font-size: 21px;
     font-weight: bold;
-
     padding: 0 12px;
     margin-bottom: 35px;
-
     color: #ffffff;
 }
 
@@ -83,15 +77,10 @@ a {
     display: flex;
     align-items: center;
     gap: 12px;
-
     padding: 12px 14px;
-
     border-radius: 8px;
-
     color: #94a3b8;
-
     font-size: 14px;
-
     transition: 0.2s;
 }
 
@@ -121,7 +110,6 @@ a {
 .main {
     flex: 1;
     min-width: 0;
-
     background: #111827;
 }
 
@@ -132,22 +120,17 @@ a {
 
 .topbar {
     height: 82px;
-
     background: #111827;
-
     border-bottom: 1px solid #1e293b;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 35px;
 }
 
 .topbar h1 {
     font-size: 22px;
     margin-bottom: 5px;
-
     color: #ffffff;
 }
 
@@ -168,11 +151,8 @@ a {
 .user-avatar {
     width: 40px;
     height: 40px;
-
     border-radius: 50%;
-
     background: #1e3a8a;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,29 +160,32 @@ a {
 
 .user strong {
     display: block;
-
     font-size: 13px;
-
     color: #f8fafc;
 }
 
 .user small {
     display: block;
-
     color: #64748b;
-
     font-size: 11px;
-
     margin-top: 3px;
 }
 
 
 /* ================================
-   CONTEÚDO
+   CONTEÚDO E PÁGINAS
 ================================ */
 
-.content {
+.content,
+.page {
     padding: 30px 35px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
 }
 
 
@@ -214,15 +197,12 @@ a {
 
 .welcome h2 {
     font-size: 20px;
-
     margin-bottom: 6px;
-
     color: #ffffff;
 }
 
 .welcome p {
     color: #94a3b8;
-
     font-size: 13px;
 }
 
@@ -233,48 +213,34 @@ a {
 
 .cards {
     display: grid;
-
-    grid-template-columns:
-        repeat(4, 1fr);
-
+    grid-template-columns: repeat(4, 1fr);
     gap: 18px;
-
     margin-bottom: 25px;
 }
 
 .card {
     background: #1e293b;
-
     border: 1px solid #334155;
-
     border-radius: 10px;
-
     padding: 20px;
-
     display: flex;
     align-items: center;
-
     gap: 15px;
-
     transition: 0.2s;
 }
 
 .card:hover {
     transform: translateY(-2px);
-
     border-color: #475569;
 }
 
 .card-icon {
     width: 45px;
     height: 45px;
-
     border-radius: 9px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     font-size: 21px;
 }
 
@@ -296,19 +262,14 @@ a {
 
 .card span {
     display: block;
-
     color: #94a3b8;
-
     font-size: 12px;
-
     margin-bottom: 6px;
 }
 
 .card strong {
     display: block;
-
     font-size: 20px;
-
     color: #ffffff;
 }
 
@@ -319,56 +280,50 @@ a {
 
 .dashboard-grid {
     display: grid;
-
-    grid-template-columns:
-        1.5fr 1fr;
-
+    grid-template-columns: 1.5fr 1fr;
     gap: 20px;
 }
 
 .panel {
     background: #1e293b;
-
     border: 1px solid #334155;
-
     border-radius: 10px;
-
-    min-height: 350px;
+    margin-bottom: 20px;
 }
 
 .panel-header {
     display: flex;
-
     justify-content: space-between;
     align-items: center;
-
     padding: 20px;
-
     border-bottom: 1px solid #334155;
 }
 
 .panel-header h3 {
     font-size: 15px;
-
     margin-bottom: 4px;
-
     color: #ffffff;
 }
 
 .panel-header p {
     color: #64748b;
-
     font-size: 11px;
 }
 
 .panel-header button {
     border: none;
-
     background: transparent;
-
     color: #60a5fa;
-
     font-size: 12px;
+}
+
+.panel-header input {
+    padding: 8px 12px;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    background: #0f172a;
+    color: white;
+    font-size: 13px;
 }
 
 
@@ -378,144 +333,48 @@ a {
 
 .empty {
     height: 270px;
-
     display: flex;
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
-
     text-align: center;
-
     padding: 20px;
 }
 
 .empty-icon {
     width: 55px;
     height: 55px;
-
     background: #0f172a;
-
     border-radius: 50%;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     font-size: 25px;
-
     margin-bottom: 12px;
 }
 
 .empty h4 {
     font-size: 14px;
-
     margin-bottom: 6px;
-
     color: #f8fafc;
 }
 
 .empty p {
     color: #64748b;
-
     font-size: 12px;
-
     max-width: 250px;
-
     margin-bottom: 15px;
 }
 
 
 /* ================================
-   BOTÃO PRINCIPAL
+   MODAIS E FORMULÁRIOS
 ================================ */
 
-.primary-button {
-    border: none;
-
-    background: #2563eb;
-
-    color: white;
-
-    padding: 9px 15px;
-
-    border-radius: 7px;
-
-    font-size: 12px;
-
-    transition: 0.2s;
-}
-
-.primary-button:hover {
-    background: #1d4ed8;
-}
-
-
-/* ================================
-   RESPONSIVIDADE
-================================ */
-
-@media (max-width: 1000px) {
-
-    .cards {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
-}
-
-
-@media (max-width: 700px) {
-
-    .sidebar {
-        width: 70px;
-
-        padding: 20px 10px;
-    }
-
-    .logo span,
-    .menu-item span {
-        display: none;
-    }
-
-    .logo {
-        justify-content: center;
-        padding: 0;
-    }
-
-    .menu-item {
-        justify-content: center;
-    }
-
-    .topbar {
-        padding: 0 20px;
-    }
-
-    .user div:last-child {
-        display: none;
-    }
-
-    .content {
-        padding: 25px 20px;
-    }
-
-}
-
-
-@media (max-width: 500px) {
-
-    .cards {
-        grid-template-columns: 1fr;
-    }
-
-}
 .hidden {
     display: none !important;
 }
+
 .modal {
     position: fixed;
     top: 0;
@@ -523,22 +382,18 @@ a {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.65);
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     z-index: 9999;
 }
 
 .modal-content {
     width: 90%;
     max-width: 600px;
-
     background: #1e293b;
     border-radius: 12px;
     padding: 25px;
-
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
@@ -546,12 +401,12 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     margin-bottom: 25px;
 }
 
 .modal-header h2 {
     margin: 0;
+    color: white;
 }
 
 .close-button {
@@ -571,19 +426,19 @@ a {
 .form-group label {
     margin-bottom: 7px;
     font-weight: 600;
+    font-size: 14px;
 }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
     padding: 12px;
-
     border: 1px solid #334155;
     border-radius: 8px;
-
     background: #0f172a;
     color: white;
-
     font-size: 14px;
+    outline: none;
 }
 
 .form-group textarea {
@@ -601,9 +456,13 @@ a {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-
     margin-top: 25px;
 }
+
+
+/* ================================
+   BOTÕES
+================================ */
 
 .primary-button,
 .secondary-button {
@@ -612,6 +471,8 @@ a {
     border: none;
     cursor: pointer;
     font-weight: 600;
+    font-size: 13px;
+    transition: 0.2s;
 }
 
 .primary-button {
@@ -631,9 +492,16 @@ a {
 .secondary-button:hover {
     background: #475569;
 }
+
+
+/* ================================
+   TABELAS
+================================ */
+
 .table-container {
     width: 100%;
     overflow-x: auto;
+    padding: 0 10px;
 }
 
 table {
@@ -672,14 +540,10 @@ tbody tr:hover {
     background: #172033;
 }
 
-#totalClientes {
-    color: #94a3b8;
-    margin-top: 5px;
-}
 
-/* ==============================
-   FICHA DO CLIENTE
-   ============================== */
+/* ================================
+   FICHA DO CLIENTE / OBRA / CONTRATO
+================================ */
 
 .cliente-dados {
     display: grid;
@@ -693,12 +557,19 @@ tbody tr:hover {
 
 .cliente-dados h3 {
     margin-bottom: 20px;
+    padding: 20px 20px 0 20px;
+}
+
+.cliente-dados p {
+    padding: 0 20px 20px 20px;
+    color: #94a3b8;
 }
 
 .dados-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 25px;
+    padding: 0 20px 20px 20px;
 }
 
 .dados-grid div {
@@ -717,23 +588,10 @@ tbody tr:hover {
     font-size: 15px;
 }
 
-.cliente-link {
-    background: none;
-    border: none;
-    padding: 0;
-    color: #60a5fa;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-}
 
-.cliente-link:hover {
-    text-decoration: underline;
-}
-
-/* ==============================
+/* ================================
    TELA DE LOGIN
-============================== */
+================================ */
 
 .login-screen {
     position: fixed;
@@ -795,25 +653,32 @@ tbody tr:hover {
     font-size: 14px;
 }
 
-.login-error.hidden {
-    display: none;
+
+/* ================================
+   RESPONSIVIDADE (MOBILE / TABLET)
+================================ */
+
+@media (max-width: 1000px) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* ==============================
-   RESPONSIVIDADE - CELULAR
-   ============================== */
-
 @media (max-width: 768px) {
-
     body {
         overflow-x: hidden;
     }
 
     .sidebar {
-    width: 64px;
-}
+        width: 64px;
+        padding: 20px 8px;
+    }
 
-    .sidebar .logo,
+    .sidebar .logo span,
     .sidebar .menu-item span {
         display: none;
     }
@@ -823,11 +688,17 @@ tbody tr:hover {
         padding: 14px 8px;
     }
 
-    .main {
-            margin-left: 70px;
-    width: calc(100% - 70px);
-        padding: 16px;
-        box-sizing: border-box;
+    .topbar {
+        padding: 0 20px;
+    }
+
+    .user div:last-child {
+        display: none;
+    }
+
+    .content,
+    .page {
+        padding: 20px 15px;
     }
 
     .page-header {
@@ -840,12 +711,6 @@ tbody tr:hover {
         width: 100%;
     }
 
-    .panel {
-        width: 100%;
-        box-sizing: border-box;
-        overflow: hidden;
-    }
-
     .panel-header {
         flex-direction: column;
         align-items: stretch;
@@ -854,20 +719,10 @@ tbody tr:hover {
 
     .panel-header input {
         width: 100%;
-        box-sizing: border-box;
-    }
-
-    .table-container {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    table {
-        min-width: 700px;
     }
 
     .form-row {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .modal-content {
@@ -884,70 +739,13 @@ tbody tr:hover {
         width: 100%;
     }
 
+    .cliente-dados {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* ==============================
-   FINANCEIRO - AJUSTE MOBILE
-============================== */
-
-@media (max-width: 768px) {
-
-    /* Área principal do financeiro */
-    .financeiro {
-        width: 100%;
-        min-width: 0;
-    }
-
-    /* Cards/resumo financeiro */
-    .financeiro .cards,
-    .financeiro .dashboard-grid {
+@media (max-width: 500px) {
+    .cards {
         grid-template-columns: 1fr;
-        width: 100%;
-    }
-
-    /* Painéis financeiros */
-    .financeiro .panel {
-        width: 100%;
-        min-width: 0;
-    }
-
-    /* Cabeçalho dos painéis */
-    .financeiro .panel-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    /* Tabelas */
-    .financeiro .table-container {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .financeiro table {
-        min-width: 650px;
-    }
-
-    /* Valores e textos */
-    .financeiro .card strong {
-        font-size: 18px;
-        word-break: break-word;
-    }
-
-    /* Formulários */
-    .financeiro .form-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    /* Botões */
-    .financeiro .modal-actions {
-        flex-direction: column;
-    }
-
-    .financeiro .modal-actions button {
-        width: 100%;
     }
 }
