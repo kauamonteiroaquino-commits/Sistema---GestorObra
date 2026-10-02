@@ -16,7 +16,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ==============================
-// AUTENTICAÇÃO E LOGIN
+// AUTENTICAÇÃO E LOGIN (CORRIGIDO)
 // ==============================
 
 const telaLogin = document.getElementById("telaLogin");
@@ -51,7 +51,9 @@ function redirecionarParaDashboard() {
     if (pageDashboard) pageDashboard.classList.remove("hidden");
 }
 
-function realizarLogin() {
+function realizarLogin(e) {
+    if (e) e.preventDefault();
+
     const inputUsuario = document.getElementById("loginUsuario");
     const inputSenha = document.getElementById("loginSenha");
 
@@ -67,18 +69,20 @@ function realizarLogin() {
 
         verificarAutenticacao();
     } else {
-        if (erroLogin) erroLogin.classList.remove("hidden");
+        if (erroLogin) {
+            erroLogin.classList.remove("hidden");
+            erroLogin.style.display = "block";
+        }
     }
 }
 
-if (btnLogin) btnLogin.addEventListener("click", realizarLogin);
+if (btnLogin) {
+    btnLogin.addEventListener("click", realizarLogin);
+}
 
-const formLoginOnSubmit = document.getElementById("formLoginOnSubmit");
+const formLoginOnSubmit = document.getElementById("formLoginOnSubmit") || document.querySelector("#telaLogin form");
 if (formLoginOnSubmit) {
-    formLoginOnSubmit.addEventListener("submit", function(event) {
-        event.preventDefault();
-        realizarLogin();
-    });
+    formLoginOnSubmit.addEventListener("submit", realizarLogin);
 }
 
 if (btnSair) {
@@ -134,6 +138,26 @@ document.querySelectorAll(".input-moeda").forEach(input => {
     aplicarMascaraMoeda(input);
 });
 
+// Função universal para fechar qualquer modal com segurança
+function fecharModalGenerico(modalElement) {
+    if (!modalElement) return;
+    modalElement.classList.remove("active", "open", "show");
+    modalElement.classList.add("hidden");
+    modalElement.style.display = "none";
+    modalElement.style.visibility = "hidden";
+    modalElement.style.opacity = "0";
+}
+
+// Função universal para abrir qualquer modal com segurança
+function abrirModalGenerico(modalElement) {
+    if (!modalElement) return;
+    modalElement.classList.remove("hidden");
+    modalElement.classList.add("active");
+    modalElement.style.display = "flex";
+    modalElement.style.visibility = "visible";
+    modalElement.style.opacity = "1";
+}
+
 // ==============================
 // NAVEGAÇÃO
 // ==============================
@@ -170,33 +194,17 @@ const cancelarCliente = document.getElementById("cancelarCliente");
 const salvarCliente = document.getElementById("salvarCliente");
 const tituloModalCliente = document.getElementById("tituloModalCliente");
 
-function fecharModalCliente() {
-    if (modalCliente) {
-        modalCliente.classList.add("hidden");
-        modalCliente.classList.remove("active", "open");
-        modalCliente.style.display = "none";
-    }
-}
-
-function abrirModalClienteFunc() {
-    if (modalCliente) {
-        modalCliente.classList.remove("hidden");
-        modalCliente.classList.add("active");
-        modalCliente.style.display = "flex";
-    }
-}
-
 if (btnNovoCliente) {
     btnNovoCliente.addEventListener("click", function() {
         clienteEmEdicaoId = null;
         if (tituloModalCliente) tituloModalCliente.textContent = "Novo Cliente";
         limparFormularioCliente();
-        abrirModalClienteFunc();
+        abrirModalGenerico(modalCliente);
     });
 }
 
-if (fecharModal) fecharModal.addEventListener("click", fecharModalCliente);
-if (cancelarCliente) cancelarCliente.addEventListener("click", fecharModalCliente);
+if (fecharModal) fecharModal.addEventListener("click", () => fecharModalGenerico(modalCliente));
+if (cancelarCliente) cancelarCliente.addEventListener("click", () => fecharModalGenerico(modalCliente));
 
 if (salvarCliente) {
     salvarCliente.addEventListener("click", async function() {
@@ -224,8 +232,8 @@ if (salvarCliente) {
                 });
             }
 
-            fecharModalCliente();
             limparFormularioCliente();
+            fecharModalGenerico(modalCliente);
         } catch (error) {
             console.error("Erro ao salvar cliente no Firebase:", error);
             alert("Erro ao salvar cliente.");
@@ -270,7 +278,7 @@ function editarCliente(id) {
     document.getElementById("enderecoCliente").value = cliente.endereco || "";
     document.getElementById("observacoesCliente").value = cliente.observacoes || "";
 
-    abrirModalClienteFunc();
+    abrirModalGenerico(modalCliente);
 }
 
 async function excluirCliente(id) {
@@ -314,7 +322,6 @@ const tituloModalObra = document.getElementById("tituloModalObra");
 const modalAnexosObra = document.getElementById("modalAnexosObra");
 const fecharModalAnexosObra = document.getElementById("fecharModalAnexosObra");
 const fecharAnexosObraBtn = document.getElementById("fecharAnexosObraBtn");
-const inputArquivoAnexoObra = document.getElementById("inputArquivoAnexoObra");
 const listaAnexosObra = document.getElementById("listaAnexosObra");
 
 if (btnNovaObra) {
@@ -323,14 +330,14 @@ if (btnNovaObra) {
         if (tituloModalObra) tituloModalObra.textContent = "Nova Obra";
         carregarClientesNoSelectObra();
         limparFormularioObra();
-        if (modalObra) modalObra.classList.remove("hidden");
+        abrirModalGenerico(modalObra);
     });
 }
 
-if (fecharModalObra) fecharModalObra.addEventListener("click", () => modalObra.classList.add("hidden"));
-if (cancelarObra) cancelarObra.addEventListener("click", () => modalObra.classList.add("hidden"));
-if (fecharModalAnexosObra) fecharModalAnexosObra.addEventListener("click", () => modalAnexosObra.classList.add("hidden"));
-if (fecharAnexosObraBtn) fecharAnexosObraBtn.addEventListener("click", () => modalAnexosObra.classList.add("hidden"));
+if (fecharModalObra) fecharModalObra.addEventListener("click", () => fecharModalGenerico(modalObra));
+if (cancelarObra) cancelarObra.addEventListener("click", () => fecharModalGenerico(modalObra));
+if (fecharModalAnexosObra) fecharModalAnexosObra.addEventListener("click", () => fecharModalGenerico(modalAnexosObra));
+if (fecharAnexosObraBtn) fecharAnexosObraBtn.addEventListener("click", () => fecharModalGenerico(modalAnexosObra));
 
 function carregarClientesNoSelectObra() {
     const select = document.getElementById("clienteObra");
@@ -373,8 +380,8 @@ if (salvarObra) {
                     });
                 }
 
-                if (modalObra) modalObra.classList.add("hidden");
                 limparFormularioObra();
+                fecharModalGenerico(modalObra);
             } catch (err) {
                 console.error("Erro ao salvar obra:", err);
             }
@@ -445,7 +452,7 @@ function abrirModalAnexosObra(id) {
         return;
     }
     renderizarListaAnexosNoModalObra(obra.anexos);
-    if (modalAnexosObra) modalAnexosObra.classList.remove("hidden");
+    abrirModalGenerico(modalAnexosObra);
 }
 
 function renderizarListaAnexosNoModalObra(anexos) {
@@ -454,7 +461,7 @@ function renderizarListaAnexosNoModalObra(anexos) {
     anexos.forEach((anexo, index) => {
         listaAnexosObra.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
-                <a href="${anexo.url}" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 14px;">📄 ${anexo.nome || 'Arquivo'}</a>
+                <button onclick="abrirArquivoBase64('${anexo.url}', '${anexo.nome}')" style="background:none; border:none; color: #2563eb; text-decoration: underline; font-size: 14px; cursor: pointer; text-align: left;">📄 ${anexo.nome || 'Arquivo'}</button>
                 <button onclick="removerAnexoIndividualObra(${index})" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Excluir</button>
             </div>
         `;
@@ -469,7 +476,7 @@ async function removerAnexoIndividualObra(indexAnexo) {
     obra.anexos.splice(indexAnexo, 1);
     await db.collection("obras").doc(String(obra.id)).update({ anexos: obra.anexos });
     mostrarObras();
-    if (obra.anexos.length === 0) modalAnexosObra.classList.add("hidden");
+    if (obra.anexos.length === 0) fecharModalGenerico(modalAnexosObra);
     else renderizarListaAnexosNoModalObra(obra.anexos);
 }
 
@@ -488,7 +495,7 @@ function editarObra(id) {
     if (document.getElementById("statusObra")) document.getElementById("statusObra").value = obra.status || "";
     if (document.getElementById("valorObra")) document.getElementById("valorObra").value = obra.valor || "";
 
-    if (modalObra) modalObra.classList.remove("hidden");
+    abrirModalGenerico(modalObra);
 }
 
 async function excluirObra(id) {
@@ -519,7 +526,6 @@ const tituloModalContrato = document.getElementById("tituloModalContrato");
 const modalAnexos = document.getElementById("modalAnexos");
 const fecharModalAnexos = document.getElementById("fecharModalAnexos");
 const fecharAnexosBtn = document.getElementById("fecharAnexosBtn");
-const inputArquivoAnexo = document.getElementById("inputArquivoAnexo");
 const listaAnexosContrato = document.getElementById("listaAnexosContrato");
 
 if (btnNovoContrato) {
@@ -529,14 +535,14 @@ if (btnNovoContrato) {
         carregarClientesNoSelectContrato();
         carregarObrasNoSelectContrato();
         limparFormularioContrato();
-        if (modalContrato) modalContrato.classList.remove("hidden");
+        abrirModalGenerico(modalContrato);
     });
 }
 
-if (fecharModalContrato) fecharModalContrato.addEventListener("click", () => modalContrato.classList.add("hidden"));
-if (cancelarContrato) cancelarContrato.addEventListener("click", () => modalContrato.classList.add("hidden"));
-if (fecharModalAnexos) fecharModalAnexos.addEventListener("click", () => modalAnexos.classList.add("hidden"));
-if (fecharAnexosBtn) fecharAnexosBtn.addEventListener("click", () => modalAnexos.classList.add("hidden"));
+if (fecharModalContrato) fecharModalContrato.addEventListener("click", () => fecharModalGenerico(modalContrato));
+if (cancelarContrato) cancelarContrato.addEventListener("click", () => fecharModalGenerico(modalContrato));
+if (fecharModalAnexos) fecharModalAnexos.addEventListener("click", () => fecharModalGenerico(modalAnexos));
+if (fecharAnexosBtn) fecharAnexosBtn.addEventListener("click", () => fecharModalGenerico(modalAnexos));
 
 function carregarClientesNoSelectContrato() {
     const select = document.getElementById("clienteContrato");
@@ -588,8 +594,8 @@ if (salvarContrato) {
                     });
                 }
 
-                if (modalContrato) modalContrato.classList.add("hidden");
                 limparFormularioContrato();
+                fecharModalGenerico(modalContrato);
             } catch (err) {
                 console.error("Erro ao salvar contrato:", err);
             }
@@ -662,7 +668,7 @@ function abrirModalAnexos(id) {
         return;
     }
     renderizarListaAnexosNoModal(contrato.anexos);
-    if (modalAnexos) modalAnexos.classList.remove("hidden");
+    abrirModalGenerico(modalAnexos);
 }
 
 function renderizarListaAnexosNoModal(anexos) {
@@ -671,11 +677,23 @@ function renderizarListaAnexosNoModal(anexos) {
     anexos.forEach((anexo, index) => {
         listaAnexosContrato.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
-                <a href="${anexo.url}" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 14px;">📄 ${anexo.nome || 'Arquivo'}</a>
+                <button onclick="abrirArquivoBase64('${anexo.url}', '${anexo.nome}')" style="background:none; border:none; color: #2563eb; text-decoration: underline; font-size: 14px; cursor: pointer; text-align: left;">📄 ${anexo.nome || 'Arquivo'}</button>
                 <button onclick="removerAnexoIndividual(${index})" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Excluir</button>
             </div>
         `;
     });
+}
+
+function abrirArquivoBase64(base64Url, nomeArquivo) {
+    const win = window.open();
+    win.document.write(`
+        <html>
+            <head><title>${nomeArquivo || 'Visualizar Anexo'}</title></head>
+            <body style="margin:0; background:#0e1117; display:flex; justify-content:center; align-items:center; height:100vh;">
+                <iframe src="${base64Url}" style="width:100%; height:100%; border:none;"></iframe>
+            </body>
+        </html>
+    `);
 }
 
 async function removerAnexoIndividual(indexAnexo) {
@@ -686,7 +704,7 @@ async function removerAnexoIndividual(indexAnexo) {
     contrato.anexos.splice(indexAnexo, 1);
     await db.collection("contratos").doc(String(contrato.id)).update({ anexos: contrato.anexos });
     mostrarContratos();
-    if (contrato.anexos.length === 0) modalAnexos.classList.add("hidden");
+    if (contrato.anexos.length === 0) fecharModalGenerico(modalAnexos);
     else renderizarListaAnexosNoModal(contrato.anexos);
 }
 
@@ -706,7 +724,7 @@ function editarContrato(id) {
     if (document.getElementById("dataContrato")) document.getElementById("dataContrato").value = contrato.data || "";
     if (document.getElementById("descricaoContrato")) document.getElementById("descricaoContrato").value = contrato.descricao || "";
 
-    if (modalContrato) modalContrato.classList.remove("hidden");
+    abrirModalGenerico(modalContrato);
 }
 
 async function excluirContrato(id) {
@@ -738,19 +756,19 @@ if (btnNovoLancamento) {
     btnNovoLancamento.addEventListener("click", function() {
         carregarObrasNoFinanceiro();
         limparFormularioLancamento();
-        modalLancamento.classList.remove("hidden");
+        abrirModalGenerico(modalLancamento);
     });
 }
 
-if (fecharModalLancamento) fecharModalLancamento.addEventListener("click", () => modalLancamento.classList.add("hidden"));
-if (cancelarLancamento) cancelarLancamento.addEventListener("click", () => modalLancamento.classList.add("hidden"));
+if (fecharModalLancamento) fecharModalLancamento.addEventListener("click", () => fecharModalGenerico(modalLancamento));
+if (cancelarLancamento) cancelarLancamento.addEventListener("click", () => fecharModalGenerico(modalLancamento));
 
 function carregarObrasNoFinanceiro() {
     const select = document.getElementById("obraLancamento");
     if (!select) return;
     select.innerHTML = '<option value="geral">🏢 Geral / Caixa</option>';
     obras.forEach(o => {
-        select.innerHTML += `<option value="${o.id}">🏗️ ${o.nome}</option>`;
+        select.innerHTML += `<option value="${o.id}">🏗 ${o.nome}</option>`;
     });
 }
 
@@ -775,8 +793,8 @@ if (salvarLancamento) {
                 valor: converterMoedaParaNumero(valorTexto)
             });
 
-            modalLancamento.classList.add("hidden");
             limparFormularioLancamento();
+            fecharModalGenerico(modalLancamento);
         } catch (err) {
             console.error("Erro ao salvar lançamento:", err);
         }
@@ -896,7 +914,6 @@ function atualizarDashboard() {
 function iniciarSincronizacaoEmTempoReal() {
     verificarAutenticacao();
 
-    // Clientes em tempo real
     db.collection("clientes").onSnapshot((snapshot) => {
         clientes = [];
         snapshot.forEach(doc => clientes.push(doc.data()));
@@ -904,7 +921,6 @@ function iniciarSincronizacaoEmTempoReal() {
         atualizarDashboard();
     });
 
-    // Obras em tempo real
     db.collection("obras").onSnapshot((snapshot) => {
         obras = [];
         snapshot.forEach(doc => obras.push(doc.data()));
@@ -912,14 +928,12 @@ function iniciarSincronizacaoEmTempoReal() {
         atualizarDashboard();
     });
 
-    // Contratos em tempo real
     db.collection("contratos").onSnapshot((snapshot) => {
         contratos = [];
         snapshot.forEach(doc => contratos.push(doc.data()));
         mostrarContratos();
     });
 
-    // Lançamentos em tempo real
     db.collection("lancamentos").onSnapshot((snapshot) => {
         lancamentos = [];
         snapshot.forEach(doc => lancamentos.push(doc.data()));
@@ -928,7 +942,6 @@ function iniciarSincronizacaoEmTempoReal() {
     });
 }
 
-// Iniciar aplicação conectada à nuvem
 iniciarSincronizacaoEmTempoReal();
 
 
@@ -956,7 +969,7 @@ function abrirCliente(id) {
         } else {
             divObrasCliente.innerHTML = obrasDoCli.map(o => `
                 <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; margin-bottom: 8px;">
-                    🏗️ <strong>${o.nome}</strong> - Status: ${o.status} <br>
+                    🏗️ <strong>${o.nome}</strong> - Status:${o.status} <br>
                     <small style="color: #94a3b8;">Valor: ${Number(o.valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</small>
                 </div>
             `).join('');
@@ -1030,3 +1043,36 @@ const inputTelCliente = document.getElementById("telefoneCliente");
 if (inputTelCliente) {
     inputTelCliente.addEventListener("input", aplicarMascaraTelefone);
 }
+
+// ==============================
+// CORREÇÃO DEFINITIVA DE FECHAMENTO DE MODAIS (ÚNICA E LIMPA)
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+    const configuracaoModais = [
+        { modal: document.getElementById("modalCliente"), bts: [document.getElementById("fecharModal"), document.getElementById("cancelarCliente")] },
+        { modal: document.getElementById("modalObra"), bts: [document.getElementById("fecharModalObra"), document.getElementById("cancelarObra")] },
+        { modal: document.getElementById("modalAnexosObra"), bts: [document.getElementById("fecharModalAnexosObra"), document.getElementById("fecharAnexosObraBtn")] },
+        { modal: document.getElementById("modalContrato"), bts: [document.getElementById("fecharModalContrato"), document.getElementById("cancelarContrato")] },
+        { modal: document.getElementById("modalAnexos"), bts: [document.getElementById("fecharModalAnexos"), document.getElementById("fecharAnexosBtn")] },
+        { modal: document.getElementById("modalLancamento"), bts: [document.getElementById("fecharModalLancamento"), document.getElementById("cancelarLancamento")] }
+    ];
+
+    configuracaoModais.forEach(item => {
+        if (!item.modal) return;
+
+        item.bts.forEach(btn => {
+            if (btn) {
+                btn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fecharModalGenerico(item.modal);
+                });
+            }
+        });
+
+        item.modal.addEventListener("click", (event) => {
+            if (event.target === item.modal) {
+                fecharModalGenerico(item.modal);
+            }
+        });
+    });
+});
