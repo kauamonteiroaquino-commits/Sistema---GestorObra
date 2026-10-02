@@ -11,6 +11,59 @@
 
 <body>
 
+<!-- LOGIN -->
+
+<div id="telaLogin" class="login-screen">
+
+    <div class="login-box">
+
+        <h1>GestorObra</h1>
+
+        <p>Acesse sua conta</p>
+
+        <div class="form-group">
+
+            <label>Usuário</label>
+
+            <input
+                type="text"
+                id="loginUsuario"
+                placeholder="Digite seu usuário"
+                autocomplete="username"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Senha</label>
+
+            <input
+                type="password"
+                id="loginSenha"
+                placeholder="Digite sua senha"
+                autocomplete="current-password"
+            >
+
+        </div>
+
+        <button
+            type="button"
+            id="btnLogin"
+            class="primary-button login-button">
+            Entrar
+        </button>
+
+        <p
+            id="erroLogin"
+            class="login-error hidden">
+            Usuário ou senha incorretos.
+        </p>
+
+    </div>
+
+</div>
+
     <div class="app">
 
         <!-- MENU LATERAL -->
@@ -66,7 +119,10 @@
                     ⚙️
                     <span>Configurações</span>
                 </a>
-
+<a href="#" class="menu-item" id="btnSair">
+    🚪
+    <span>Sair</span>
+</a>
             </div>
 
         </aside>
@@ -1727,9 +1783,6 @@
         </main>
 
     </div>
-
-
-    <script src="script.js"></script>
 
 </body>
 </html>
