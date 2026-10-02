@@ -885,3 +885,69 @@ tbody tr:hover {
     }
 
 }
+
+/* ==============================
+   FINANCEIRO - AJUSTE MOBILE
+============================== */
+
+@media (max-width: 768px) {
+
+    /* Área principal do financeiro */
+    .financeiro {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Cards/resumo financeiro */
+    .financeiro .cards,
+    .financeiro .dashboard-grid {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    /* Painéis financeiros */
+    .financeiro .panel {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Cabeçalho dos painéis */
+    .financeiro .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* Tabelas */
+    .financeiro .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .financeiro table {
+        min-width: 650px;
+    }
+
+    /* Valores e textos */
+    .financeiro .card strong {
+        font-size: 18px;
+        word-break: break-word;
+    }
+
+    /* Formulários */
+    .financeiro .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* Botões */
+    .financeiro .modal-actions {
+        flex-direction: column;
+    }
+
+    .financeiro .modal-actions button {
+        width: 100%;
+    }
+}
