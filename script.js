@@ -1,4 +1,21 @@
 // ==============================
+// CONFIGURAÇÃO DO FIREBASE
+// ==============================
+const firebaseConfig = {
+    apiKey: "AIzaSyAUJ1NViUIgmGl8qKf8gsbtlw72R0okOrg",
+    authDomain: "gestorobra-c4a92.firebaseapp.com",
+    projectId: "gestorobra-c4a92",
+    storageBucket: "gestorobra-c4a92.firebasestorage.app",
+    messagingSenderId: "369876379222",
+    appId: "1:369876379222:web:af5dcde7dc3be9e881fdf7",
+    measurementId: "G-1F69BSSMF9"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ==============================
 // AUTENTICAÇÃO E LOGIN
 // ==============================
 
@@ -13,8 +30,6 @@ function verificarAutenticacao() {
     if (usuarioLogado === "true") {
         if (telaLogin) telaLogin.classList.add("hidden");
         if (appContainer) appContainer.style.display = "flex";
-        
-        // Garante que ao entrar vai para a tela principal (Dashboard)
         redirecionarParaDashboard();
     } else {
         if (telaLogin) telaLogin.classList.remove("hidden");
@@ -23,14 +38,12 @@ function verificarAutenticacao() {
 }
 
 function redirecionarParaDashboard() {
-    // Remove o destaque de todos os itens do menu e ativa o Dashboard
     const menuItems = document.querySelectorAll(".menu-item");
     menuItems.forEach(menu => menu.classList.remove("active"));
     
     const menuDash = document.querySelector('.menu-item[data-page="dashboard"]');
     if (menuDash) menuDash.classList.add("active");
 
-    // Esconde todas as páginas e exibe a página do Dashboard
     const pages = document.querySelectorAll(".page");
     pages.forEach(page => page.classList.add("hidden"));
 
@@ -49,7 +62,6 @@ function realizarLogin() {
         localStorage.setItem("usuarioLogado", "true");
         if (erroLogin) erroLogin.classList.add("hidden");
         
-        // Limpa os campos de input do login
         if (inputUsuario) inputUsuario.value = "";
         if (inputSenha) inputSenha.value = "";
 
@@ -78,6 +90,20 @@ if (btnSair) {
 }
 
 // ==============================
+// VARIÁVEIS GLOBAIS DE DADOS
+// ==============================
+let clientes = [];
+let obras = [];
+let contratos = [];
+let lancamentos = [];
+
+let clienteEmEdicaoId = null;
+let obraEmEdicaoId = null;
+let obraVisualizandoId = null;
+let contratoEmEdicaoId = null;
+let contratoVisualizandoId = null;
+
+// ==============================
 // FUNÇÕES AUXILIARES / UTILITÁRIAS
 // ==============================
 
@@ -104,18 +130,9 @@ function aplicarMascaraMoeda(input) {
     });
 }
 
-// Aplicação automática de máscara em todos os inputs com a classe .input-moeda
 document.querySelectorAll(".input-moeda").forEach(input => {
     aplicarMascaraMoeda(input);
 });
-
-function salvarDadosStorage() {
-    localStorage.setItem("clientes", JSON.stringify(clientes));
-    localStorage.setItem("obras", JSON.stringify(obras));
-    localStorage.setItem("contratos", JSON.stringify(contratos));
-    localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
-}
-
 
 // ==============================
 // NAVEGAÇÃO
@@ -143,11 +160,8 @@ menuItems.forEach(item => {
 
 
 // ==============================
-// CLIENTES
+// CLIENTES (SINCRONIZAÇÃO EM TEMPO REAL)
 // ==============================
-
-let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
-let clienteEmEdicaoId = null;
 
 const btnNovoCliente = document.getElementById("btnNovoCliente");
 const modalCliente = document.getElementById("modalCliente");
@@ -169,7 +183,7 @@ if (fecharModal) fecharModal.addEventListener("click", () => modalCliente.classL
 if (cancelarCliente) cancelarCliente.addEventListener("click", () => modalCliente.classList.add("hidden"));
 
 if (salvarCliente) {
-    salvarCliente.addEventListener("click", function() {
+    salvarCliente.addEventListener("click", async function() {
         const nome = document.getElementById("nomeCliente").value.trim();
         const telefone = document.getElementById("telefoneCliente").value.trim();
         const documento = document.getElementById("documentoCliente").value.trim();
@@ -181,23 +195,25 @@ if (salvarCliente) {
             return;
         }
 
-        if (clienteEmEdicaoId !== null) {
-            clientes = clientes.map(c => {
-                if (c.id === clienteEmEdicaoId) {
-                    return { ...c, nome, telefone, documento, endereco, observacoes };
-                }
-                return c;
-            });
-        } else {
-            const novoCliente = { id: Date.now(), nome, telefone, documento, endereco, observacoes };
-            clientes.push(novoCliente);
-        }
+        try {
+            if (clienteEmEdicaoId !== null) {
+                await db.collection("clientes").doc(String(clienteEmEdicaoId)).update({
+                    nome, telefone, documento, endereco, observacoes
+                });
+            } else {
+                const novoId = String(Date.now());
+                await db.collection("clientes").doc(novoId).set({
+                    id: novoId,
+                    nome, telefone, documento, endereco, observacoes
+                });
+            }
 
-        salvarDadosStorage();
-        mostrarClientes();
-        atualizarDashboard();
-        if (modalCliente) modalCliente.classList.add("hidden");
-        limparFormularioCliente();
+            if (modalCliente) modalCliente.classList.add("hidden");
+            limparFormularioCliente();
+        } catch (error) {
+            console.error("Erro ao salvar cliente no Firebase:", error);
+            alert("Erro ao salvar cliente.");
+        }
     });
 }
 
@@ -212,13 +228,13 @@ function mostrarClientes() {
     clientes.forEach(cliente => {
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td><button class="cliente-link" onclick="abrirCliente(${cliente.id})" style="background:none; border:none; color:var(--primary-color, #2563eb); cursor:pointer; font-weight:600; padding:0;">${cliente.nome}</button></td>
+            <td><button class="cliente-link" onclick="abrirCliente('${cliente.id}')" style="background:none; border:none; color:var(--primary-color, #2563eb); cursor:pointer; font-weight:600; padding:0;">${cliente.nome}</button></td>
             <td>${cliente.telefone || "-"}</td>
             <td>${cliente.documento || "-"}</td>
             <td>${cliente.endereco || "-"}</td>
             <td>
-                <button class="secondary-button" onclick="editarCliente(${cliente.id})" style="margin-right: 4px;">Editar</button>
-                <button class="secondary-button" onclick="excluirCliente(${cliente.id})" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
+                <button class="secondary-button" onclick="editarCliente('${cliente.id}')" style="margin-right: 4px;">Editar</button>
+                <button class="secondary-button" onclick="excluirCliente('${cliente.id}')" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
             </td>
         `;
         tabela.appendChild(linha);
@@ -226,7 +242,7 @@ function mostrarClientes() {
 }
 
 function editarCliente(id) {
-    const cliente = clientes.find(c => c.id === id);
+    const cliente = clientes.find(c => String(c.id) === String(id));
     if (!cliente) return;
 
     clienteEmEdicaoId = cliente.id;
@@ -241,12 +257,13 @@ function editarCliente(id) {
     if (modalCliente) modalCliente.classList.remove("hidden");
 }
 
-function excluirCliente(id) {
+async function excluirCliente(id) {
     if (!confirm("Deseja realmente excluir este cliente?")) return;
-    clientes = clientes.filter(c => c.id !== id);
-    salvarDadosStorage();
-    mostrarClientes();
-    atualizarDashboard();
+    try {
+        await db.collection("clientes").doc(String(id)).delete();
+    } catch (error) {
+        console.error("Erro ao excluir cliente:", error);
+    }
 }
 
 function limparFormularioCliente() {
@@ -261,19 +278,15 @@ function limparFormularioCliente() {
 const voltarClientes = document.getElementById("voltarClientes");
 if (voltarClientes) {
     voltarClientes.addEventListener("click", () => {
-        document.getElementById("page-ficha-client")?.classList.add("hidden");
+        document.getElementById("page-ficha-cliente")?.classList.add("hidden");
         document.getElementById("page-clientes")?.classList.remove("hidden");
     });
 }
 
 
 // ==============================
-// GESTÃO DE OBRAS (MÚLTIPLOS ANEXOS E MODAL INTERNO)
+// OBRAS
 // ==============================
-
-let obras = JSON.parse(localStorage.getItem("obras")) || [];
-let obraEmEdicaoId = null;
-let obraVisualizandoId = null;
 
 const btnNovaObra = document.getElementById("btnNovaObra");
 const modalObra = document.getElementById("modalObra");
@@ -282,7 +295,6 @@ const cancelarObra = document.getElementById("cancelarObra");
 const salvarObra = document.getElementById("salvarObra");
 const tituloModalObra = document.getElementById("tituloModalObra");
 
-// Elementos do Modal de Anexos de Obras
 const modalAnexosObra = document.getElementById("modalAnexosObra");
 const fecharModalAnexosObra = document.getElementById("fecharModalAnexosObra");
 const fecharAnexosObraBtn = document.getElementById("fecharAnexosObraBtn");
@@ -301,7 +313,6 @@ if (btnNovaObra) {
 
 if (fecharModalObra) fecharModalObra.addEventListener("click", () => modalObra.classList.add("hidden"));
 if (cancelarObra) cancelarObra.addEventListener("click", () => modalObra.classList.add("hidden"));
-
 if (fecharModalAnexosObra) fecharModalAnexosObra.addEventListener("click", () => modalAnexosObra.classList.add("hidden"));
 if (fecharAnexosObraBtn) fecharAnexosObraBtn.addEventListener("click", () => modalAnexosObra.classList.add("hidden"));
 
@@ -314,13 +325,13 @@ function carregarClientesNoSelectObra() {
     });
 }
 
-// Salvar Obra com múltiplos ficheiros
 if (salvarObra) {
     salvarObra.addEventListener("click", function() {
         const nome = document.getElementById("nomeObra")?.value || "";
         const clienteId = document.getElementById("clienteObra")?.value || "";
         const endereco = document.getElementById("enderecoObra")?.value || "";
         const status = document.getElementById("statusObra")?.value || "Em andamento";
+        const valor = converterMoedaParaNumero(document.getElementById("valorObra")?.value || 0);
         const inputAnexo = document.getElementById("anexoObra");
 
         if (!nome) {
@@ -328,38 +339,29 @@ if (salvarObra) {
             return;
         }
 
-        const finalizarSalvamento = (novosAnexos = []) => {
-            if (obraEmEdicaoId !== null) {
-                obras = obras.map(o => {
-                    if (o.id === obraEmEdicaoId) {
-                        return { 
-                            ...o, 
-                            nome, 
-                            clienteId, 
-                            endereco, 
-                            status, 
-                            anexos: [...(o.anexos || []), ...novosAnexos] 
-                        };
-                    }
-                    return o;
-                });
-            } else {
-                const novaObra = {
-                    id: Date.now(),
-                    nome,
-                    clienteId,
-                    endereco,
-                    status,
-                    anexos: novosAnexos
-                };
-                obras.push(novaObra);
-            }
+        const finalizarSalvamento = async (novosAnexos = []) => {
+            try {
+                if (obraEmEdicaoId !== null) {
+                    const obraAntiga = obras.find(o => String(o.id) === String(obraEmEdicaoId));
+                    const anexosFinais = [...(obraAntiga?.anexos || []), ...novosAnexos];
+                    
+                    await db.collection("obras").doc(String(obraEmEdicaoId)).update({
+                        nome, clienteId, endereco, status, valor, anexos: anexosFinais
+                    });
+                } else {
+                    const novoId = String(Date.now());
+                    await db.collection("obras").doc(novoId).set({
+                        id: novoId,
+                        nome, clienteId, endereco, status, valor,
+                        anexos: novosAnexos
+                    });
+                }
 
-            salvarDadosStorage();
-            mostrarObras();
-            atualizarDashboard();
-            if (modalObra) modalObra.classList.add("hidden");
-            limparFormularioObra();
+                if (modalObra) modalObra.classList.add("hidden");
+                limparFormularioObra();
+            } catch (err) {
+                console.error("Erro ao salvar obra:", err);
+            }
         };
 
         if (inputAnexo && inputAnexo.files && inputAnexo.files.length > 0) {
@@ -397,16 +399,11 @@ function mostrarObras() {
 
     tabela.innerHTML = "";
     obras.forEach(obra => {
-        const cliente = clientes.find(c => c.id == obra.clienteId);
-        
-        // Compatibilidade com registos antigos que tinham apenas um anexo (`anexo`)
-        if (obra.anexo && (!obra.anexos || obra.anexos.length === 0)) {
-            obra.anexos = [{ nome: "Documento Anexado", url: obra.anexo, data: "-" }];
-        }
+        const cliente = clientes.find(c => String(c.id) === String(obra.clienteId));
         const qtdAnexos = obra.anexos ? obra.anexos.length : 0;
 
         let botaoAnexo = qtdAnexos > 0 
-            ? `<button class="secondary-button" onclick="abrirModalAnexosObra(${obra.id})" style="margin-right: 4px; background-color: rgba(37, 99, 235, 0.1); color: #2563eb; border-color: rgba(37, 99, 235, 0.2);">Ver Anexos (${qtdAnexos})</button>` 
+            ? `<button class="secondary-button" onclick="abrirModalAnexosObra('${obra.id}')" style="margin-right: 4px; background-color: rgba(37, 99, 235, 0.1); color: #2563eb; border-color: rgba(37, 99, 235, 0.2);">Ver Anexos (${qtdAnexos})</button>` 
             : `<span style="color: #64748b; font-size: 12px; margin-right: 4px;">Sem anexos</span>`;
 
         const linha = document.createElement("tr");
@@ -416,117 +413,52 @@ function mostrarObras() {
             <td>${obra.status || "-"}</td>
             <td>
                 ${botaoAnexo}
-                <button class="secondary-button" onclick="editarObra(${obra.id})" style="margin-right: 4px;">Editar</button>
-                <button class="secondary-button" onclick="excluirObra(${obra.id})" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
+                <button class="secondary-button" onclick="editarObra('${obra.id}')" style="margin-right: 4px;">Editar</button>
+                <button class="secondary-button" onclick="excluirObra('${obra.id}')" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
             </td>
         `;
         tabela.appendChild(linha);
     });
 }
 
-// Abre o modal de anexos da obra
 function abrirModalAnexosObra(id) {
     obraVisualizandoId = id;
-    const obra = obras.find(o => o.id === id);
+    const obra = obras.find(o => String(o.id) === String(id));
     if (!obra || !obra.anexos || obra.anexos.length === 0) {
         alert("Esta obra não possui anexos.");
         return;
     }
-
     renderizarListaAnexosNoModalObra(obra.anexos);
-    if (inputArquivoAnexoObra) inputArquivoAnexoObra.value = "";
     if (modalAnexosObra) modalAnexosObra.classList.remove("hidden");
 }
 
-// Renderiza a lista convertendo para Blob URL para carregar sem falhas
 function renderizarListaAnexosNoModalObra(anexos) {
     if (!listaAnexosObra) return;
-
     listaAnexosObra.innerHTML = "";
     anexos.forEach((anexo, index) => {
-        let urlParaAbrir = anexo.url;
-        
-        if (anexo.url && anexo.url.startsWith('data:')) {
-            try {
-                const arr = anexo.url.split(',');
-                const mimeMatch = arr[0].match(/:(.*?);/);
-                const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-                const bstr = atob(arr[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
-                const blob = new Blob([u8arr], { type: mime });
-                urlParaAbrir = URL.createObjectURL(blob);
-            } catch (e) {
-                console.error("Erro ao converter anexo da obra para Blob:", e);
-            }
-        }
-
         listaAnexosObra.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
-                <a href="${urlParaAbrir}" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 14px;">📄 ${anexo.nome || 'Arquivo ' + (index + 1)}</a>
+                <a href="${anexo.url}" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 14px;">📄 ${anexo.nome || 'Arquivo'}</a>
                 <button onclick="removerAnexoIndividualObra(${index})" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Excluir</button>
             </div>
         `;
     });
 }
 
-// Adicionar mais arquivos diretamente pelo modal de anexos da obra
-if (inputArquivoAnexoObra) {
-    inputArquivoAnexoObra.addEventListener("change", function() {
-        if (!inputArquivoAnexoObra.files || inputArquivoAnexoObra.files.length === 0) return;
-
-        const obra = obras.find(o => o.id === obraVisualizandoId);
-        if (!obra) return;
-
-        let filesProcessados = 0;
-        let novosLidos = [];
-        const total = inputArquivoAnexoObra.files.length;
-
-        Array.from(inputArquivoAnexoObra.files).forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                novosLidos[index] = {
-                    nome: file.name,
-                    url: e.target.result,
-                    data: new Date().toLocaleDateString()
-                };
-                filesProcessados++;
-                if (filesProcessados === total) {
-                    if (!obra.anexos) obra.anexos = [];
-                    obra.anexos.push(...novosLidos);
-                    salvarDadosStorage();
-                    mostrarObras();
-                    renderizarListaAnexosNoModalObra(obra.anexos);
-                    inputArquivoAnexoObra.value = "";
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    });
-}
-
-function removerAnexoIndividualObra(indexAnexo) {
+async function removerAnexoIndividualObra(indexAnexo) {
     if (!confirm("Deseja realmente excluir este arquivo?")) return;
-    
-    const obra = obras.find(o => o.id === obraVisualizandoId);
+    const obra = obras.find(o => String(o.id) === String(obraVisualizandoId));
     if (!obra || !obra.anexos) return;
 
     obra.anexos.splice(indexAnexo, 1);
-    salvarDadosStorage();
+    await db.collection("obras").doc(String(obra.id)).update({ anexos: obra.anexos });
     mostrarObras();
-
-    if (obra.anexos.length === 0) {
-        if (modalAnexosObra) modalAnexosObra.classList.add("hidden");
-    } else {
-        renderizarListaAnexosNoModalObra(obra.anexos);
-    }
+    if (obra.anexos.length === 0) modalAnexosObra.classList.add("hidden");
+    else renderizarListaAnexosNoModalObra(obra.anexos);
 }
 
 function editarObra(id) {
-    const obra = obras.find(o => o.id === id);
+    const obra = obras.find(o => String(o.id) === String(id));
     if (!obra) return;
 
     obraEmEdicaoId = obra.id;
@@ -538,39 +470,28 @@ function editarObra(id) {
     if (document.getElementById("clienteObra")) document.getElementById("clienteObra").value = obra.clienteId || "";
     if (document.getElementById("enderecoObra")) document.getElementById("enderecoObra").value = obra.endereco || "";
     if (document.getElementById("statusObra")) document.getElementById("statusObra").value = obra.status || "";
-    
-    const inputAnexo = document.getElementById("anexoObra");
-    if (inputAnexo) inputAnexo.value = "";
+    if (document.getElementById("valorObra")) document.getElementById("valorObra").value = obra.valor || "";
 
     if (modalObra) modalObra.classList.remove("hidden");
 }
 
-function excluirObra(id) {
+async function excluirObra(id) {
     if (!confirm("Deseja realmente excluir esta obra?")) return;
-    obras = obras.filter(o => o.id !== id);
-    salvarDadosStorage();
-    mostrarObras();
-    atualizarDashboard();
+    await db.collection("obras").doc(String(id)).delete();
 }
 
 function limparFormularioObra() {
     if (document.getElementById("nomeObra")) document.getElementById("nomeObra").value = "";
     if (document.getElementById("clienteObra")) document.getElementById("clienteObra").value = "";
     if (document.getElementById("enderecoObra")) document.getElementById("enderecoObra").value = "";
-    if (document.getElementById("statusObra")) document.getElementById("statusObra").value = "Em andamento";
-    const inputAnexo = document.getElementById("anexoObra");
-    if (inputAnexo) inputAnexo.value = "";
+    if (document.getElementById("valorObra")) document.getElementById("valorObra").value = "";
     obraEmEdicaoId = null;
 }
 
 
 // ==============================
-// GESTÃO DE CONTRATOS (COM O SEU MODAL DE ANEXOS)
+// CONTRATOS
 // ==============================
-
-let contratos = JSON.parse(localStorage.getItem("contratos")) || [];
-let contratoEmEdicaoId = null;
-let contratoVisualizandoId = null;
 
 const btnNovoContrato = document.getElementById("btnNovoContrato");
 const modalContrato = document.getElementById("modalContrato");
@@ -579,7 +500,6 @@ const cancelarContrato = document.getElementById("cancelarContrato");
 const salvarContrato = document.getElementById("salvarContrato");
 const tituloModalContrato = document.getElementById("tituloModalContrato");
 
-// Elementos ligados diretamente ao seu HTML de Anexos
 const modalAnexos = document.getElementById("modalAnexos");
 const fecharModalAnexos = document.getElementById("fecharModalAnexos");
 const fecharAnexosBtn = document.getElementById("fecharAnexosBtn");
@@ -599,8 +519,6 @@ if (btnNovoContrato) {
 
 if (fecharModalContrato) fecharModalContrato.addEventListener("click", () => modalContrato.classList.add("hidden"));
 if (cancelarContrato) cancelarContrato.addEventListener("click", () => modalContrato.classList.add("hidden"));
-
-// Fechar o modal de anexos usando os botões do seu HTML
 if (fecharModalAnexos) fecharModalAnexos.addEventListener("click", () => modalAnexos.classList.add("hidden"));
 if (fecharAnexosBtn) fecharAnexosBtn.addEventListener("click", () => modalAnexos.classList.add("hidden"));
 
@@ -622,7 +540,6 @@ function carregarObrasNoSelectContrato() {
     });
 }
 
-// Salvar Contrato recolhendo múltiplos ficheiros
 if (salvarContrato) {
     salvarContrato.addEventListener("click", function() {
         const clienteId = document.getElementById("clienteContrato")?.value || "";
@@ -637,40 +554,29 @@ if (salvarContrato) {
             return;
         }
 
-        const finalizarSalvamento = (novosAnexos = []) => {
-            if (contratoEmEdicaoId !== null) {
-                contratos = contratos.map(c => {
-                    if (c.id === contratoEmEdicaoId) {
-                        return { 
-                            ...c, 
-                            clienteId, 
-                            obraId, 
-                            valor, 
-                            data, 
-                            descricao, 
-                            anexos: [...(c.anexos || []), ...novosAnexos] 
-                        };
-                    }
-                    return c;
-                });
-            } else {
-                const novoContrato = {
-                    id: Date.now(),
-                    clienteId,
-                    obraId,
-                    valor,
-                    data,
-                    descricao,
-                    anexos: novosAnexos
-                };
-                contratos.push(novoContrato);
-            }
+        const finalizarSalvamento = async (novosAnexos = []) => {
+            try {
+                if (contratoEmEdicaoId !== null) {
+                    const contratoAntigo = contratos.find(c => String(c.id) === String(contratoEmEdicaoId));
+                    const anexosFinais = [...(contratoAntigo?.anexos || []), ...novosAnexos];
 
-            salvarDadosStorage();
-            mostrarContratos();
-            atualizarDashboard();
-            if (modalContrato) modalContrato.classList.add("hidden");
-            limparFormularioContrato();
+                    await db.collection("contratos").doc(String(contratoEmEdicaoId)).update({
+                        clienteId, obraId, valor, data, descricao, anexos: anexosFinais
+                    });
+                } else {
+                    const novoId = String(Date.now());
+                    await db.collection("contratos").doc(novoId).set({
+                        id: novoId,
+                        clienteId, obraId, valor, data, descricao,
+                        anexos: novosAnexos
+                    });
+                }
+
+                if (modalContrato) modalContrato.classList.add("hidden");
+                limparFormularioContrato();
+            } catch (err) {
+                console.error("Erro ao salvar contrato:", err);
+            }
         };
 
         if (inputAnexo && inputAnexo.files && inputAnexo.files.length > 0) {
@@ -708,138 +614,68 @@ function mostrarContratos() {
 
     tabela.innerHTML = "";
     contratos.forEach(contrato => {
-        const obra = obras.find(o => o.id == contrato.obraId);
-        const cliente = clientes.find(c => c.id == contrato.clienteId);
-        
-        if (contrato.anexo && (!contrato.anexos || contrato.anexos.length === 0)) {
-            contrato.anexos = [{ nome: "Documento Anexado", url: contrato.anexo, data: "-" }];
-        }
+        const obra = obras.find(o => String(o.id) === String(contrato.obraId));
+        const cliente = clientes.find(c => String(c.id) === String(contrato.clienteId));
         const qtdAnexos = contrato.anexos ? contrato.anexos.length : 0;
 
         let botaoAnexo = qtdAnexos > 0 
-            ? `<button class="secondary-button" onclick="abrirModalAnexos(${contrato.id})" style="margin-right: 4px; background-color: rgba(37, 99, 235, 0.1); color: #2563eb; border-color: rgba(37, 99, 235, 0.2);">Ver Anexos (${qtdAnexos})</button>` 
+            ? `<button class="secondary-button" onclick="abrirModalAnexos('${contrato.id}')" style="margin-right: 4px; background-color: rgba(37, 99, 235, 0.1); color: #2563eb; border-color: rgba(37, 99, 235, 0.2);">Ver Anexos (${qtdAnexos})</button>` 
             : `<span style="color: #64748b; font-size: 12px; margin-right: 4px;">Sem anexos</span>`;
 
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>Contrato #${contrato.id.toString().slice(-4)}</td>
+            <td>Contrato #${String(contrato.id).slice(-4)}</td>
             <td>${cliente ? cliente.nome : "-"}</td>
             <td>${obra ? obra.nome : "-"}</td>
             <td>${contrato.valor || "-"}</td>
-            <td>${contrato.data || "-"}</td>
             <td>
                 ${botaoAnexo}
-                <button class="secondary-button" onclick="editarContrato(${contrato.id})" style="margin-right: 4px;">Editar</button>
-                <button class="secondary-button" onclick="excluirContrato(${contrato.id})" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
+                <button class="secondary-button" onclick="editarContrato('${contrato.id}')" style="margin-right: 4px;">Editar</button>
+                <button class="secondary-button" onclick="excluirContrato('${contrato.id}')" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
             </td>
         `;
         tabela.appendChild(linha);
     });
 }
 
-// Abre o seu modal existente e preenche a lista
 function abrirModalAnexos(id) {
     contratoVisualizandoId = id;
-    const contrato = contratos.find(c => c.id === id);
+    const contrato = contratos.find(c => String(c.id) === String(id));
     if (!contrato || !contrato.anexos || contrato.anexos.length === 0) {
         alert("Este contrato não possui anexos.");
         return;
     }
-
     renderizarListaAnexosNoModal(contrato.anexos);
-    if (inputArquivoAnexo) inputArquivoAnexo.value = "";
     if (modalAnexos) modalAnexos.classList.remove("hidden");
 }
 
 function renderizarListaAnexosNoModal(anexos) {
     if (!listaAnexosContrato) return;
-
     listaAnexosContrato.innerHTML = "";
     anexos.forEach((anexo, index) => {
-        // Cria um Blob URL seguro para o navegador conseguir abrir imagens e PDFs sem bloqueios
-        let urlParaAbrir = anexo.url;
-        
-        if (anexo.url && anexo.url.startsWith('data:')) {
-            try {
-                const arr = anexo.url.split(',');
-                const mimeMatch = arr[0].match(/:(.*?);/);
-                const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-                const bstr = atob(arr[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
-                const blob = new Blob([u8arr], { type: mime });
-                urlParaAbrir = URL.createObjectURL(blob);
-            } catch (e) {
-                console.error("Erro ao converter anexo para Blob:", e);
-            }
-        }
-
         listaAnexosContrato.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
-                <a href="${urlParaAbrir}" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 14px;">📄 ${anexo.nome || 'Arquivo ' + (index + 1)}</a>
+                <a href="${anexo.url}" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 14px;">📄 ${anexo.nome || 'Arquivo'}</a>
                 <button onclick="removerAnexoIndividual(${index})" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Excluir</button>
             </div>
         `;
     });
 }
 
-// Se adicionar arquivos direto pelo input do modal de anexos
-if (inputArquivoAnexo) {
-    inputArquivoAnexo.addEventListener("change", function() {
-        if (!inputArquivoAnexo.files || inputArquivoAnexo.files.length === 0) return;
-
-        const contrato = contratos.find(c => c.id === contratoVisualizandoId);
-        if (!contrato) return;
-
-        let filesProcessados = 0;
-        let novosLidos = [];
-        const total = inputArquivoAnexo.files.length;
-
-        Array.from(inputArquivoAnexo.files).forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                novosLidos[index] = {
-                    nome: file.name,
-                    url: e.target.result,
-                    data: new Date().toLocaleDateString()
-                };
-                filesProcessados++;
-                if (filesProcessados === total) {
-                    if (!contrato.anexos) contrato.anexos = [];
-                    contrato.anexos.push(...novosLidos);
-                    salvarDadosStorage();
-                    mostrarContratos();
-                    renderizarListaAnexosNoModal(contrato.anexos);
-                    inputArquivoAnexo.value = "";
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    });
-}
-
-function removerAnexoIndividual(indexAnexo) {
+async function removerAnexoIndividual(indexAnexo) {
     if (!confirm("Deseja realmente excluir este arquivo?")) return;
-    
-    const contrato = contratos.find(c => c.id === contratoVisualizandoId);
+    const contrato = contratos.find(c => String(c.id) === String(contratoVisualizandoId));
     if (!contrato || !contrato.anexos) return;
 
     contrato.anexos.splice(indexAnexo, 1);
-    salvarDadosStorage();
+    await db.collection("contratos").doc(String(contrato.id)).update({ anexos: contrato.anexos });
     mostrarContratos();
-
-    if (contrato.anexos.length === 0) {
-        if (modalAnexos) modalAnexos.classList.add("hidden");
-    } else {
-        renderizarListaAnexosNoModal(contrato.anexos);
-    }
+    if (contrato.anexos.length === 0) modalAnexos.classList.add("hidden");
+    else renderizarListaAnexosNoModal(contrato.anexos);
 }
 
 function editarContrato(id) {
-    const contrato = contratos.find(c => c.id === id);
+    const contrato = contratos.find(c => String(c.id) === String(id));
     if (!contrato) return;
 
     contratoEmEdicaoId = contrato.id;
@@ -853,19 +689,13 @@ function editarContrato(id) {
     if (document.getElementById("valorContrato")) document.getElementById("valorContrato").value = contrato.valor || "";
     if (document.getElementById("dataContrato")) document.getElementById("dataContrato").value = contrato.data || "";
     if (document.getElementById("descricaoContrato")) document.getElementById("descricaoContrato").value = contrato.descricao || "";
-    
-    const inputAnexo = document.getElementById("anexoContrato");
-    if (inputAnexo) inputAnexo.value = "";
 
     if (modalContrato) modalContrato.classList.remove("hidden");
 }
 
-function excluirContrato(id) {
+async function excluirContrato(id) {
     if (!confirm("Deseja realmente excluir este contrato?")) return;
-    contratos = contratos.filter(c => c.id !== id);
-    salvarDadosStorage();
-    mostrarContratos();
-    atualizarDashboard();
+    await db.collection("contratos").doc(String(id)).delete();
 }
 
 function limparFormularioContrato() {
@@ -874,8 +704,6 @@ function limparFormularioContrato() {
     if (document.getElementById("valorContrato")) document.getElementById("valorContrato").value = "";
     if (document.getElementById("dataContrato")) document.getElementById("dataContrato").value = "";
     if (document.getElementById("descricaoContrato")) document.getElementById("descricaoContrato").value = "";
-    const inputAnexo = document.getElementById("anexoContrato");
-    if (inputAnexo) inputAnexo.value = "";
     contratoEmEdicaoId = null;
 }
 
@@ -883,8 +711,6 @@ function limparFormularioContrato() {
 // ==============================
 // FINANCEIRO
 // ==============================
-
-let lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
 
 const btnNovoLancamento = document.getElementById("btnNovoLancamento");
 const modalLancamento = document.getElementById("modalLancamento");
@@ -913,7 +739,7 @@ function carregarObrasNoFinanceiro() {
 }
 
 if (salvarLancamento) {
-    salvarLancamento.addEventListener("click", function() {
+    salvarLancamento.addEventListener("click", async function() {
         const descricao = document.getElementById("descricaoLancamento").value.trim();
         const tipo = document.getElementById("tipoLancamento").value;
         const data = document.getElementById("dataLancamento").value;
@@ -922,21 +748,22 @@ if (salvarLancamento) {
 
         if (!descricao) { alert("Digite a descrição do lançamento."); return; }
 
-        const lancamento = {
-            id: Date.now(),
-            descricao: descricao,
-            tipo: tipo,
-            data: data,
-            obraId: obraId,
-            valor: converterMoedaParaNumero(valorTexto)
-        };
+        try {
+            const novoId = String(Date.now());
+            await db.collection("lancamentos").doc(novoId).set({
+                id: novoId,
+                descricao,
+                tipo,
+                data,
+                obraId,
+                valor: converterMoedaParaNumero(valorTexto)
+            });
 
-        lancamentos.push(lancamento);
-        salvarDadosStorage();
-        modalLancamento.classList.add("hidden");
-        limparFormularioLancamento();
-        mostrarLancamentos();
-        atualizarDashboard();
+            modalLancamento.classList.add("hidden");
+            limparFormularioLancamento();
+        } catch (err) {
+            console.error("Erro ao salvar lançamento:", err);
+        }
     });
 }
 
@@ -963,8 +790,8 @@ function mostrarLancamentos() {
         if (l.tipo === "receita") totalRec += val;
         else totalDesp += val;
 
-        const obra = obras.find(o => o.id == l.obraId);
-        const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
+        const obra = obras.find(o => String(o.id) === String(l.obraId));
+        const cliente = obra ? clientes.find(c => String(c.id) === String(obra.clienteId)) : null;
 
         const linha = document.createElement("tr");
         linha.innerHTML = `
@@ -974,7 +801,7 @@ function mostrarLancamentos() {
             <td>${cliente ? cliente.nome : "-"}</td>
             <td>${val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
             <td>${l.data || "-"}</td>
-            <td><button class="secondary-button" onclick="excluirLancamento(${l.id})">Excluir</button></td>
+            <td><button class="secondary-button" onclick="excluirLancamento('${l.id}')">Excluir</button></td>
         `;
         tabela.appendChild(linha);
     });
@@ -988,12 +815,9 @@ function mostrarLancamentos() {
     if (elSaldoFin) elSaldoFin.textContent = (totalRec - totalDesp).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function excluirLancamento(id) {
+async function excluirLancamento(id) {
     if (!confirm("Deseja realmente excluir este lançamento?")) return;
-    lancamentos = lancamentos.filter(l => l.id !== id);
-    salvarDadosStorage();
-    mostrarLancamentos();
-    atualizarDashboard();
+    await db.collection("lancamentos").doc(String(id)).delete();
 }
 
 
@@ -1031,7 +855,7 @@ function atualizarDashboard() {
             listaObrasRecentes.innerHTML = `<p style="color: #94a3b8;">Nenhuma obra cadastrada até o momento.</p>`;
         } else {
             listaObrasRecentes.innerHTML = obras.slice(-5).reverse().map(obra => {
-                const cliente = clientes.find(c => c.id === obra.clienteId);
+                const cliente = clientes.find(c => String(c.id) === String(obra.clienteId));
                 return `
                     <div style="background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
                         <div>
@@ -1050,165 +874,53 @@ function atualizarDashboard() {
 
 
 // ==============================
-// INICIALIZAÇÃO GERAL
+// OUVINTES EM TEMPO REAL (FIREBASE ON-SNAPSHOT)
 // ==============================
 
-verificarAutenticacao();
-mostrarClientes();
-mostrarObras();
-mostrarContratos();
-mostrarLancamentos();
-atualizarDashboard();
+function iniciarSincronizacaoEmTempoReal() {
+    verificarAutenticacao();
+
+    // Clientes em tempo real
+    db.collection("clientes").onSnapshot((snapshot) => {
+        clientes = [];
+        snapshot.forEach(doc => clientes.push(doc.data()));
+        mostrarClientes();
+        atualizarDashboard();
+    });
+
+    // Obras em tempo real
+    db.collection("obras").onSnapshot((snapshot) => {
+        obras = [];
+        snapshot.forEach(doc => obras.push(doc.data()));
+        mostrarObras();
+        atualizarDashboard();
+    });
+
+    // Contratos em tempo real
+    db.collection("contratos").onSnapshot((snapshot) => {
+        contratos = [];
+        snapshot.forEach(doc => contratos.push(doc.data()));
+        mostrarContratos();
+    });
+
+    // Lançamentos em tempo real
+    db.collection("lancamentos").onSnapshot((snapshot) => {
+        lancamentos = [];
+        snapshot.forEach(doc => lancamentos.push(doc.data()));
+        mostrarLancamentos();
+        atualizarDashboard();
+    });
+}
+
+// Iniciar aplicação conectada à nuvem
+iniciarSincronizacaoEmTempoReal();
 
 
 // ==============================
-// FILTROS DE PESQUISA
-// ==============================
-document.addEventListener("DOMContentLoaded", () => {
-    const pesquisaCliente = document.getElementById("pesquisaCliente");
-    if (pesquisaCliente) {
-        pesquisaCliente.addEventListener("input", (e) => {
-            const termo = e.target.value.toLowerCase().trim();
-            const filtrados = clientes.filter(c => 
-                c.nome.toLowerCase().includes(termo) || 
-                (c.telefone && c.telefone.toLowerCase().includes(termo)) || 
-                (c.documento && c.documento.toLowerCase().includes(termo))
-            );
-            renderizarTabelaClientesFiltrados(filtrados);
-        });
-    }
-
-    const pesquisaObra = document.getElementById("pesquisaObra");
-    if (pesquisaObra) {
-        pesquisaObra.addEventListener("input", (e) => {
-            const termo = e.target.value.toLowerCase().trim();
-            const filtrados = obras.filter(o => 
-                o.nome.toLowerCase().includes(termo) || 
-                (o.endereco && o.endereco.toLowerCase().includes(termo))
-            );
-            renderizarTabelaObrasFiltradas(filtrados);
-        });
-    }
-
-    const pesquisaContrato = document.getElementById("pesquisaContrato");
-    if (pesquisaContrato) {
-        pesquisaContrato.addEventListener("input", (e) => {
-            const termo = e.target.value.toLowerCase().trim();
-            const filtrados = contratos.filter(c => {
-                const cli = clientes.find(cl => cl.id == c.clienteId);
-                return cli && cli.nome.toLowerCase().includes(termo);
-            });
-            renderizarTabelaContratosFiltrados(filtrados);
-        });
-    }
-
-    const pesquisaLancamento = document.getElementById("pesquisaLancamento");
-    if (pesquisaLancamento) {
-        pesquisaLancamento.addEventListener("input", (e) => {
-            const termo = e.target.value.toLowerCase().trim();
-            const filtrados = lancamentos.filter(l => 
-                l.descricao.toLowerCase().includes(termo) || l.tipo.toLowerCase().includes(termo)
-            );
-            renderizarTabelaLancamentosFiltrados(filtrados);
-        });
-    }
-});
-
-function renderizarTabelaClientesFiltrados(lista) {
-    const tabela = document.getElementById("listaClientes");
-    if (!tabela) return;
-    tabela.innerHTML = "";
-    lista.forEach(cliente => {
-        const linha = document.createElement("tr");
-        linha.innerHTML = `
-            <td><button class="cliente-link" onclick="abrirCliente(${cliente.id})" style="background:none; border:none; color:#2563eb; cursor:pointer; font-weight:600; padding:0;">${cliente.nome}</button></td>
-            <td>${cliente.telefone || "-"}</td>
-            <td>${cliente.documento || "-"}</td>
-            <td>${cliente.endereco || "-"}</td>
-            <td><button class="secondary-button" onclick="excluirCliente(${cliente.id})">Excluir</button></td>
-        `;
-        tabela.appendChild(linha);
-    });
-}
-
-function renderizarTabelaObrasFiltradas(lista) {
-    const tabela = document.getElementById("listaObras");
-    if (!tabela) return;
-    tabela.innerHTML = "";
-    lista.forEach(obra => {
-        const cliente = clientes.find(c => c.id == obra.clienteId);
-        
-        if (obra.anexo && (!obra.anexos || obra.anexos.length === 0)) {
-            obra.anexos = [{ nome: "Documento Anexado", url: obra.anexo, data: "-" }];
-        }
-        const qtdAnexos = obra.anexos ? obra.anexos.length : 0;
-
-        let botaoAnexo = qtdAnexos > 0 
-            ? `<button class="secondary-button" onclick="abrirModalAnexosObra(${obra.id})" style="margin-right: 4px; background-color: rgba(37, 99, 235, 0.1); color: #2563eb; border-color: rgba(37, 99, 235, 0.2);">Ver Anexos (${qtdAnexos})</button>` 
-            : `<span style="color: #64748b; font-size: 12px; margin-right: 4px;">Sem anexos</span>`;
-
-        const linha = document.createElement("tr");
-        linha.innerHTML = `
-            <td>${obra.nome || "-"}</td>
-            <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${obra.status || "-"}</td>
-            <td>
-                ${botaoAnexo}
-                <button class="secondary-button" onclick="editarObra(${obra.id})" style="margin-right: 4px;">Editar</button>
-                <button class="secondary-button" onclick="excluirObra(${obra.id})" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
-            </td>
-        `;
-        tabela.appendChild(linha);
-    });
-}
-
-function renderizarTabelaContratosFiltrados(lista) {
-    const tabela = document.getElementById("listaContratos");
-    if (!tabela) return;
-    tabela.innerHTML = "";
-    lista.forEach(contrato => {
-        const obra = obras.find(o => o.id == contrato.obraId);
-        const cliente = clientes.find(c => c.id == contrato.clienteId);
-        const linha = document.createElement("tr");
-        linha.innerHTML = `
-            <td>Contrato #${contrato.id.toString().slice(-4)}</td>
-            <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${obra ? obra.nome : "-"}</td>
-            <td>${contrato.valor || "-"}</td>
-            <td>${contrato.data || "-"}</td>
-            <td><button class="secondary-button" onclick="excluirContrato(${contrato.id})">Excluir</button></td>
-        `;
-        tabela.appendChild(linha);
-    });
-}
-
-function renderizarTabelaLancamentosFiltrados(lista) {
-    const tabela = document.getElementById("listaLancamentos");
-    if (!tabela) return;
-    tabela.innerHTML = "";
-    lista.forEach(l => {
-        const val = Number(l.valor || 0);
-        const obra = obras.find(o => o.id == l.obraId);
-        const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
-        const linha = document.createElement("tr");
-        linha.innerHTML = `
-            <td>${l.descricao}</td>
-            <td>${l.tipo === "receita" ? "🟢 Receita" : "🔴 Despesa"}</td>
-            <td>${obra ? obra.nome : "Geral"}</td>
-            <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-            <td>${l.data || "-"}</td>
-            <td><button class="secondary-button" onclick="excluirLancamento(${l.id})">Excluir</button></td>
-        `;
-        tabela.appendChild(linha);
-    });
-}
-
-// ==========================================
 // FICHA DO CLIENTE
-// ==========================================
+// ==============================
 function abrirCliente(id) {
-    const cliente = clientes.find(c => c.id === id);
+    const cliente = clientes.find(c => String(c.id) === String(id));
     if (!cliente) return;
 
     pages.forEach(p => p.classList.add("hidden"));
@@ -1221,7 +933,7 @@ function abrirCliente(id) {
     document.getElementById("fichaObservacoes").textContent = cliente.observacoes || "Nenhuma observação.";
 
     const divObrasCliente = document.getElementById("obrasDoCliente");
-    const obrasDoCli = obras.filter(o => Number(o.clienteId) === Number(id));
+    const obrasDoCli = obras.filter(o => String(o.clienteId) === String(id));
     if (divObrasCliente) {
         if (obrasDoCli.length === 0) {
             divObrasCliente.innerHTML = `<p>Nenhuma obra cadastrada para este cliente.</p>`;
@@ -1236,14 +948,14 @@ function abrirCliente(id) {
     }
 
     const divContratosCliente = document.getElementById("contratosDoCliente");
-    const contratosDoCli = contratos.filter(c => Number(c.clienteId) === Number(id));
+    const contratosDoCli = contratos.filter(c => String(c.clienteId) === String(id));
     
     if (divContratosCliente) {
         if (contratosDoCli.length === 0) {
             divContratosCliente.innerHTML = `<p>Nenhum contrato cadastrado para este cliente.</p>`;
         } else {
             divContratosCliente.innerHTML = contratosDoCli.map(c => {
-                const obraContrato = obras.find(o => o.id == c.obraId);
+                const obraContrato = obras.find(o => String(o.id) === String(c.obraId));
                 return `
                     <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; margin-bottom: 8px;">
                         📄 Contrato (${obraContrato ? obraContrato.nome : 'Obra Geral'})<br>
@@ -1254,51 +966,3 @@ function abrirCliente(id) {
         }
     }
 }
-
-// ==============================
-// MÁSCARAS DE INPUT
-// ==============================
-
-function aplicarMascarasCliente() {
-    const inputTelefone = document.getElementById("telefoneCliente");
-    const inputDocumento = document.getElementById("documentoCliente");
-
-    if (inputTelefone) {
-        inputTelefone.addEventListener("input", function (e) {
-            let valor = e.target.value.replace(/\D/g, "");
-            if (valor.length > 11) valor = valor.slice(0, 11);
-
-            if (valor.length > 6) {
-                valor = valor.replace(/^(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
-            } else if (valor.length > 2) {
-                valor = valor.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
-            } else if (valor.length > 0) {
-                valor = valor.replace(/^(\d{0,2})/, "($1");
-            }
-            e.target.value = valor;
-        });
-    }
-
-    if (inputDocumento) {
-        inputDocumento.addEventListener("input", function (e) {
-            let valor = e.target.value.replace(/\D/g, "");
-
-            if (valor.length <= 11) {
-                if (valor.length > 9) {
-                    valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
-                } else if (valor.length > 6) {
-                    valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
-                } else if (valor.length > 3) {
-                    valor = valor.replace(/^(\d{3})(\d{0,3})/, "$1.$2");
-                }
-            } else {
-                if (valor.length > 14) valor = valor.slice(0, 14);
-                valor = valor.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, "$1.$2.$3/$4-$5");
-            }
-
-            e.target.value = valor;
-        });
-    }
-}
-
-aplicarMascarasCliente();
