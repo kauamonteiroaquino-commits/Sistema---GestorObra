@@ -749,3 +749,47 @@ tbody tr:hover {
         grid-template-columns: 1fr;
     }
 }
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.card-indicador {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-titulo {
+    font-size: 0.875rem;
+    color: #94a3b8;
+}
+
+.card-valor {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #f8fafc;
+}
+
+.card-valor.receita {
+    color: #10b981;
+}
+
+.card-valor.despesa {
+    color: #ef4444;
+}
+
+.card-resumo-obra {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 14px 18px;
+}
+
