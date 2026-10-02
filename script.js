@@ -1,4 +1,25 @@
 // ==============================
+// FUNÇÕES AUXILIARES / UTILITÁRIAS
+// ==============================
+
+function converterMoedaParaNumero(valorTexto) {
+    if (!valorTexto) return 0;
+    if (typeof valorTexto === "number") return valorTexto;
+    const limpo = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+    return Number(limpo) || 0;
+}
+
+function salvarDadosStorage() {
+    localStorage.setItem("clientes", JSON.stringify(clientes));
+    localStorage.setItem("obras", JSON.stringify(obras));
+    localStorage.setItem("contratos", JSON.stringify(contratos));
+    localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+    localStorage.setItem("materiais", JSON.stringify(materiais));
+    localStorage.setItem("compras", JSON.stringify(compras));
+}
+
+
+// ==============================
 // NAVEGAÇÃO
 // ==============================
 
@@ -33,6 +54,9 @@ menuItems.forEach(item => {
 // CLIENTES
 // ==============================
 
+let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+let clienteEditandoId = null;
+
 const btnNovoCliente = document.getElementById("btnNovoCliente");
 const modalCliente = document.getElementById("modalCliente");
 const fecharModal = document.getElementById("fecharModal");
@@ -62,14 +86,6 @@ if (cancelarCliente) {
     });
 }
 
-
-// ==============================
-// SALVAR CLIENTE
-// ==============================
-
-let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
-let clienteEditandoId = null;
-
 if (salvarCliente) {
     salvarCliente.addEventListener("click", function() {
         const nome = document.getElementById("nomeCliente").value.trim();
@@ -83,7 +99,6 @@ if (salvarCliente) {
             return;
         }
 
-        // EDITANDO CLIENTE
         if (clienteEditandoId !== null) {
             const cliente = clientes.find(c => c.id === clienteEditandoId);
 
@@ -95,8 +110,7 @@ if (salvarCliente) {
                 cliente.observacoes = observacoes;
             }
 
-            localStorage.setItem("clientes", JSON.stringify(clientes));
-
+            salvarDadosStorage();
             mostrarClientes();
             mostrarObras();
 
@@ -111,7 +125,6 @@ if (salvarCliente) {
             return;
         }
 
-        // NOVO CLIENTE
         const cliente = {
             id: Date.now(),
             nome: nome,
@@ -122,17 +135,13 @@ if (salvarCliente) {
         };
 
         clientes.push(cliente);
-        localStorage.setItem("clientes", JSON.stringify(clientes));
+        salvarDadosStorage();
 
         mostrarClientes();
         modalCliente.classList.add("hidden");
         limparFormularioCliente();
     });
 }
-
-// ==============================
-// MOSTRAR CLIENTES
-// ==============================
 
 function mostrarClientes() {
     const tabela = document.getElementById("listaClientes");
@@ -182,7 +191,7 @@ function excluirCliente(id) {
     }
 
     clientes = clientes.filter(cliente => cliente.id !== id);
-    localStorage.setItem("clientes", JSON.stringify(clientes));
+    salvarDadosStorage();
     mostrarClientes();
 }
 
@@ -202,11 +211,7 @@ function limparFormularioCliente() {
     document.getElementById("observacoesCliente").value = "";
 }
 
-
-// ==============================
-// MÁSCARAS AUTOMÁTICAS
-// ==============================
-
+// Máscaras automáticas
 const telefoneInput = document.getElementById("telefoneCliente");
 if (telefoneInput) {
     telefoneInput.addEventListener("input", function() {
@@ -266,6 +271,7 @@ if (pesquisaCliente) {
     pesquisaCliente.addEventListener("input", function() {
         const pesquisa = this.value.toLowerCase().trim();
         const tabela = document.getElementById("listaClientes");
+        if (!tabela) return;
         const linhas = tabela.querySelectorAll("tr");
 
         linhas.forEach(linha => {
@@ -274,11 +280,6 @@ if (pesquisaCliente) {
         });
     });
 }
-
-
-// ==============================
-// ABRIR FICHA DO CLIENTE
-// ==============================
 
 function abrirCliente(id) {
     const cliente = clientes.find(c => c.id === id);
@@ -293,7 +294,6 @@ function abrirCliente(id) {
     document.getElementById("fichaEndereco").textContent = cliente.endereco || "-";
     document.getElementById("fichaObservacoes").textContent = cliente.observacoes || "Nenhuma observação.";
 
-    // Obras do Cliente
     const obrasCliente = obras.filter(obra => obra.clienteId === cliente.id);
     const containerObras = document.getElementById("obrasDoCliente");
     containerObras.innerHTML = "";
@@ -314,7 +314,6 @@ function abrirCliente(id) {
         });
     }
 
-    // Contratos do Cliente
     const contratosCliente = contratos.filter(contrato => {
         const obra = obras.find(o => o.id === contrato.obraId);
         return obra && obra.clienteId === cliente.id;
@@ -372,7 +371,7 @@ if (editarCliente) {
 
 
 // ==============================
-// OBRAS
+// GESTÃO DE OBRAS COM STATUS
 // ==============================
 
 let obras = JSON.parse(localStorage.getItem("obras")) || [];
@@ -384,20 +383,23 @@ const cancelarObra = document.getElementById("cancelarObra");
 const clienteObra = document.getElementById("clienteObra");
 const salvarObra = document.getElementById("salvarObra");
 
+const statusTags = {
+    planejamento: '<span class="badge badge-warning">📋 Planeamento</span>',
+    em_andamento: '<span class="badge badge-info">🏗️ Em Andamento</span>',
+    pausada: '<span class="badge badge-secondary">⏸️ Pausada</span>',
+    concluida: '<span class="badge badge-success">✅ Concluída</span>'
+};
+
 if (btnNovaObra) {
     btnNovaObra.addEventListener("click", function() {
         carregarClientesNaObra();
+        limparFormularioObra();
         modalObra.classList.remove("hidden");
     });
 }
 
-if (fecharModalObra) {
-    fecharModalObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
-}
-
-if (cancelarObra) {
-    cancelarObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
-}
+if (fecharModalObra) fecharModalObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
+if (cancelarObra) cancelarObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
 
 function carregarClientesNaObra() {
     if (!clienteObra) return;
@@ -413,11 +415,12 @@ function carregarClientesNaObra() {
 if (salvarObra) {
     salvarObra.addEventListener("click", function() {
         const nome = document.getElementById("nomeObra").value.trim();
-        const clienteId = document.getElementById("clienteObra").value;
+        const clienteId = document.getElementById("clienteObra") ? document.getElementById("clienteObra").value : "";
         const endereco = document.getElementById("enderecoObra").value.trim();
         const dataInicio = document.getElementById("dataInicioObra").value;
+        const dataFim = document.getElementById("dataFimObra") ? document.getElementById("dataFimObra").value : "";
+        const status = document.getElementById("statusObra") ? document.getElementById("statusObra").value : "em_andamento";
         const valorTexto = document.getElementById("valorObra").value;
-        const valor = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
         const observacoes = document.getElementById("observacoesObra").value.trim();
 
         if (nome === "") { alert("Digite o nome da obra."); return; }
@@ -429,23 +432,28 @@ if (salvarObra) {
             clienteId: Number(clienteId),
             endereco: endereco,
             dataInicio: dataInicio,
-            valor: Number(valor) || 0,
+            dataFim: dataFim,
+            status: status,
+            valor: converterMoedaParaNumero(valorTexto),
             observacoes: observacoes
         };
 
         obras.push(obra);
-        localStorage.setItem("obras", JSON.stringify(obras));
+        salvarDadosStorage();
         modalObra.classList.add("hidden");
         limparFormularioObra();
         mostrarObras();
+        atualizarDashboard();
     });
 }
 
 function limparFormularioObra() {
     document.getElementById("nomeObra").value = "";
-    document.getElementById("clienteObra").value = "";
+    if (document.getElementById("clienteObra")) document.getElementById("clienteObra").value = "";
     document.getElementById("enderecoObra").value = "";
     document.getElementById("dataInicioObra").value = "";
+    if (document.getElementById("dataFimObra")) document.getElementById("dataFimObra").value = "";
+    if (document.getElementById("statusObra")) document.getElementById("statusObra").value = "em_andamento";
     document.getElementById("valorObra").value = "";
     document.getElementById("observacoesObra").value = "";
 }
@@ -466,9 +474,12 @@ function mostrarObras() {
         linha.innerHTML = `
             <td><button class="cliente-link" onclick="abrirObra(${obra.id})">${obra.nome}</button></td>
             <td>${cliente ? cliente.nome : "-"}</td>
-            <td>${obra.endereco || "-"}</td>
+            <td>${statusTags[obra.status] || statusTags.em_andamento}</td>
             <td>${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-            <td><button class="secondary-button" onclick="excluirObra(${obra.id})">Excluir</button></td>
+            <td>
+                <button class="secondary-button" onclick="abrirObra(${obra.id})">Ver Ficha</button>
+                <button class="secondary-button" onclick="excluirObra(${obra.id})">Excluir</button>
+            </td>
         `;
         tabela.appendChild(linha);
     });
@@ -484,8 +495,9 @@ function atualizarTotalObras() {
 function excluirObra(id) {
     if (!confirm("Deseja realmente excluir esta obra?")) return;
     obras = obras.filter(o => o.id !== id);
-    localStorage.setItem("obras", JSON.stringify(obras));
+    salvarDadosStorage();
     mostrarObras();
+    atualizarDashboard();
 }
 
 const valorObraInput = document.getElementById("valorObra");
@@ -502,6 +514,7 @@ if (pesquisaObra) {
     pesquisaObra.addEventListener("input", function() {
         const pesquisa = this.value.toLowerCase().trim();
         const tabela = document.getElementById("listaObras");
+        if (!tabela) return;
         tabela.querySelectorAll("tr").forEach(linha => {
             linha.style.display = linha.textContent.toLowerCase().includes(pesquisa) ? "" : "none";
         });
@@ -593,7 +606,7 @@ if (salvarContrato) {
 
         if (nome === "") { alert("Digite o nome do contrato."); return; }
 
-        const valor = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+        const valor = converterMoedaParaNumero(valorTexto);
 
         if (contratoEditandoId !== null) {
             const contrato = contratos.find(c => c.id === contratoEditandoId);
@@ -601,7 +614,7 @@ if (salvarContrato) {
                 contrato.nome = nome;
                 contrato.obraId = Number(obraId);
                 contrato.data = data;
-                contrato.valor = Number(valor) || 0;
+                contrato.valor = valor;
                 contrato.observacoes = observacoes;
             }
             contratoEditandoId = null;
@@ -611,13 +624,13 @@ if (salvarContrato) {
                 nome: nome,
                 obraId: Number(obraId),
                 data: data,
-                valor: Number(valor) || 0,
+                valor: valor,
                 observacoes: observacoes
             };
             contratos.push(contrato);
         }
 
-        localStorage.setItem("contratos", JSON.stringify(contratos));
+        salvarDadosStorage();
         modalContrato.classList.add("hidden");
         limparFormularioContrato();
         mostrarContratos();
@@ -667,7 +680,7 @@ function atualizarTotalContratos() {
 function excluirContrato(id) {
     if (!confirm("Deseja realmente excluir este contrato?")) return;
     contratos = contratos.filter(c => c.id !== id);
-    localStorage.setItem("contratos", JSON.stringify(contratos));
+    salvarDadosStorage();
     mostrarContratos();
 }
 
@@ -777,7 +790,7 @@ if (salvarLancamento) {
         if (obraId === "") { alert("Selecione a obra."); return; }
         if (valorTexto === "") { alert("Digite o valor."); return; }
 
-        const valor = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+        const valor = converterMoedaParaNumero(valorTexto);
 
         const lancamento = {
             id: Date.now(),
@@ -785,15 +798,16 @@ if (salvarLancamento) {
             tipo: tipo,
             obraId: obraId === "geral" ? "geral" : Number(obraId),
             data: data,
-            valor: Number(valor) || 0,
+            valor: valor,
             observacoes: observacoes
         };
 
         lancamentos.push(lancamento);
-        localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+        salvarDadosStorage();
         modalLancamento.classList.add("hidden");
         limparFormularioLancamento();
         mostrarLancamentos();
+        atualizarDashboard();
     });
 }
 
@@ -863,8 +877,9 @@ function atualizarTotalLancamentos() {
 function excluirLancamento(id) {
     if (!confirm("Deseja realmente excluir este lançamento?")) return;
     lancamentos = lancamentos.filter(l => l.id !== id);
-    localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+    salvarDadosStorage();
     mostrarLancamentos();
+    atualizarDashboard();
 }
 
 
@@ -904,7 +919,7 @@ if (salvarMaterial) {
         if (nome === "") { alert("Digite o nome do material."); return; }
         if (quantidade === "") { alert("Digite a quantidade."); return; }
 
-        const preco = precoTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+        const preco = converterMoedaParaNumero(precoTexto);
 
         const material = {
             id: Date.now(),
@@ -912,11 +927,11 @@ if (salvarMaterial) {
             categoria: categoria,
             unidade: unidade,
             quantidade: Number(quantidade),
-            preco: Number(preco) || 0
+            preco: preco
         };
 
         materiais.push(material);
-        localStorage.setItem("materiais", JSON.stringify(materiais));
+        salvarDadosStorage();
         modalMaterial.classList.add("hidden");
         limparFormularioMaterial();
         mostrarMateriais();
@@ -966,7 +981,7 @@ function atualizarTotalMateriais() {
 function excluirMaterial(id) {
     if (!confirm("Deseja realmente excluir este material?")) return;
     materiais = materiais.filter(m => m.id !== id);
-    localStorage.setItem("materiais", JSON.stringify(materiais));
+    salvarDadosStorage();
     mostrarMateriais();
 }
 
@@ -1039,7 +1054,7 @@ if (salvarCompra) {
         if (quantidade === "" || Number(quantidade) <= 0) { alert("Digite uma quantidade válida."); return; }
         if (valorTexto === "") { alert("Digite o valor."); return; }
 
-        const valor = Number(valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim());
+        const valor = converterMoedaParaNumero(valorTexto);
 
         if (isNaN(valor) || valor <= 0) {
             alert("Digite um valor válido.");
@@ -1058,18 +1073,14 @@ if (salvarCompra) {
         };
 
         compras.push(compra);
-        localStorage.setItem("compras", JSON.stringify(compras));
 
-        // Atualizar Estoque
         if (materialId !== "outros") {
             const material = materiais.find(m => m.id === Number(materialId));
             if (material) {
                 material.quantidade = Number(material.quantidade || 0) + Number(quantidade);
-                localStorage.setItem("materiais", JSON.stringify(materiais));
             }
         }
 
-        // Lançar Financeiro
         const novoLancamento = {
             id: Date.now() + 1,
             descricao: "Compra: " + nome,
@@ -1081,11 +1092,12 @@ if (salvarCompra) {
         };
 
         lancamentos.push(novoLancamento);
-        localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+        salvarDadosStorage();
 
         mostrarCompras();
         mostrarMateriais();
         mostrarLancamentos();
+        atualizarDashboard();
 
         modalCompra.classList.add("hidden");
         limparFormularioCompra();
@@ -1140,7 +1152,7 @@ function atualizarTotalCompras() {
 function excluirCompra(id) {
     if (!confirm("Deseja realmente excluir esta compra?")) return;
     compras = compras.filter(c => c.id !== id);
-    localStorage.setItem("compras", JSON.stringify(compras));
+    salvarDadosStorage();
     mostrarCompras();
 }
 
@@ -1166,10 +1178,11 @@ function fazerLogin() {
 
     if (usuario === usuarioCorreto && senha === senhaCorreta) {
         localStorage.setItem("gestorObraLogado", "true");
-        telaLogin.classList.add("hidden");
+        if (telaLogin) telaLogin.classList.add("hidden");
 
         pages.forEach(p => p.classList.add("hidden"));
-        document.getElementById("page-dashboard").classList.remove("hidden");
+        const dashPage = document.getElementById("page-dashboard");
+        if (dashPage) dashPage.classList.remove("hidden");
 
         menuItems.forEach(m => m.classList.remove("active"));
         const dashMenu = document.querySelector('[data-page="dashboard"]');
@@ -1178,6 +1191,8 @@ function fazerLogin() {
         if (erroLogin) erroLogin.classList.add("hidden");
         loginUsuario.value = "";
         loginSenha.value = "";
+
+        atualizarDashboard();
     } else {
         if (erroLogin) erroLogin.classList.remove("hidden");
         loginSenha.value = "";
@@ -1212,7 +1227,78 @@ if (btnSair) {
 
 
 // ==============================
-// INICIALIZAÇÃO DAS LISTAS
+// DASHBOARD E INDICADORES
+// ==============================
+
+function atualizarDashboard() {
+    const obrasAtivas = obras.filter(o => !o.status || o.status === "em_andamento" || o.status === "planejamento").length;
+    const elObrasAtivas = document.getElementById("dashObrasAtivas");
+    if (elObrasAtivas) elObrasAtivas.textContent = obrasAtivas;
+
+    let totalReceitas = 0;
+    let totalDespesas = 0;
+
+    lancamentos.forEach(l => {
+        const valor = Number(l.valor || 0);
+        if (l.tipo === "receita") totalReceitas += valor;
+        if (l.tipo === "despesa") totalDespesas += valor;
+    });
+
+    const saldoGeral = totalReceitas - totalDespesas;
+
+    const elSaldoGeral = document.getElementById("dashSaldoGeral");
+    const elTotalReceitas = document.getElementById("dashTotalReceitas");
+    const elTotalDespesas = document.getElementById("dashTotalDespesas");
+
+    if (elSaldoGeral) elSaldoGeral.textContent = saldoGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elTotalReceitas) elTotalReceitas.textContent = totalReceitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elTotalDespesas) elTotalDespesas.textContent = totalDespesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    mostrarResumoObrasDashboard();
+}
+
+function mostrarResumoObrasDashboard() {
+    const container = document.getElementById("dashListaObrasRecentes");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (obras.length === 0) {
+        container.innerHTML = "<p style='color: #94a3b8;'>Nenhuma obra cadastrada até o momento.</p>";
+        return;
+    }
+
+    const ultimasObras = [...obras].reverse().slice(0, 5);
+
+    ultimasObras.forEach(obra => {
+        const cliente = clientes.find(c => c.id === obra.clienteId);
+        
+        const lancamentosObra = lancamentos.filter(l => Number(l.obraId) === obra.id);
+        const receitasObra = lancamentosObra.filter(l => l.tipo === "receita").reduce((acc, l) => acc + Number(l.valor || 0), 0);
+        const despesasObra = lancamentosObra.filter(l => l.tipo === "despesa").reduce((acc, l) => acc + Number(l.valor || 0), 0);
+        const saldoObra = receitasObra - despesasObra;
+
+        const card = document.createElement("div");
+        card.className = "card-resumo-obra";
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong>🏗️ ${obra.nome}</strong>
+                <span style="font-size: 0.85rem; color: #94a3b8;">${cliente ? cliente.nome : "Cliente não informado"}</span>
+            </div>
+            <div style="display: flex; gap: 15px; font-size: 0.9rem; color: #cbd5e1;">
+                <span>Orçamento: <strong>${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></span>
+                <span>Gasto Realizado: <strong style="color: #ef4444;">${despesasObra.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></span>
+                <span>Saldo da Obra: <strong style="color: ${saldoObra >= 0 ? '#10b981' : '#ef4444'};">${saldoObra.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></span>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+
+// ==============================
+// INICIALIZAÇÃO DAS LISTAS E DASHBOARD
 // ==============================
 
 mostrarClientes();
@@ -1221,3 +1307,4 @@ mostrarContratos();
 mostrarLancamentos();
 mostrarMateriais();
 mostrarCompras();
+atualizarDashboard();
