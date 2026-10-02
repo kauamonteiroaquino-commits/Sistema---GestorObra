@@ -6,9 +6,7 @@ const menuItems = document.querySelectorAll(".menu-item");
 const pages = document.querySelectorAll(".page");
 
 menuItems.forEach(item => {
-
     item.addEventListener("click", function(event) {
-
         event.preventDefault();
 
         menuItems.forEach(menu => {
@@ -27,9 +25,7 @@ menuItems.forEach(item => {
         if (selectedPage) {
             selectedPage.classList.remove("hidden");
         }
-
     });
-
 });
 
 
@@ -42,24 +38,29 @@ const modalCliente = document.getElementById("modalCliente");
 const fecharModal = document.getElementById("fecharModal");
 const cancelarCliente = document.getElementById("cancelarCliente");
 const salvarCliente = document.getElementById("salvarCliente");
+const editarCliente = document.getElementById("editarCliente");
 
+if (btnNovoCliente) {
+    btnNovoCliente.addEventListener("click", function() {
+        clienteEditandoId = null;
+        limparFormularioCliente();
+        document.querySelector("#modalCliente h2").textContent = "Novo cliente";
+        salvarCliente.textContent = "Salvar cliente";
+        modalCliente.classList.remove("hidden");
+    });
+}
 
-// Abrir cadastro
-btnNovoCliente.addEventListener("click", function() {
-    modalCliente.classList.remove("hidden");
-});
+if (fecharModal) {
+    fecharModal.addEventListener("click", function() {
+        modalCliente.classList.add("hidden");
+    });
+}
 
-
-// Fechar no X
-fecharModal.addEventListener("click", function() {
-    modalCliente.classList.add("hidden");
-});
-
-
-// Fechar no Cancelar
-cancelarCliente.addEventListener("click", function() {
-    modalCliente.classList.add("hidden");
-});
+if (cancelarCliente) {
+    cancelarCliente.addEventListener("click", function() {
+        modalCliente.classList.add("hidden");
+    });
+}
 
 
 // ==============================
@@ -67,128 +68,96 @@ cancelarCliente.addEventListener("click", function() {
 // ==============================
 
 let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+let clienteEditandoId = null;
 
-salvarCliente.addEventListener("click", function() {
+if (salvarCliente) {
+    salvarCliente.addEventListener("click", function() {
+        const nome = document.getElementById("nomeCliente").value.trim();
+        const telefone = document.getElementById("telefoneCliente").value.trim();
+        const documento = document.getElementById("documentoCliente").value.trim();
+        const endereco = document.getElementById("enderecoCliente").value.trim();
+        const observacoes = document.getElementById("observacoesCliente").value.trim();
 
-    const nome = document.getElementById("nomeCliente").value.trim();
-    const telefone = document.getElementById("telefoneCliente").value.trim();
-    const documento = document.getElementById("documentoCliente").value.trim();
-    const endereco = document.getElementById("enderecoCliente").value.trim();
-    const observacoes = document.getElementById("observacoesCliente").value.trim();
-
-    if (nome === "") {
-        alert("Digite o nome do cliente.");
-        return;
-    }
-
-    // ==============================
-    // EDITANDO CLIENTE
-    // ==============================
-
-    if (clienteEditandoId !== null) {
-
-        const cliente = clientes.find(
-            cliente => cliente.id === clienteEditandoId
-        );
-
-        if (cliente) {
-
-            cliente.nome = nome;
-            cliente.telefone = telefone;
-            cliente.documento = documento;
-            cliente.endereco = endereco;
-            cliente.observacoes = observacoes;
-
+        if (nome === "") {
+            alert("Digite o nome do cliente.");
+            return;
         }
 
+        // EDITANDO CLIENTE
+        if (clienteEditandoId !== null) {
+            const cliente = clientes.find(c => c.id === clienteEditandoId);
+
+            if (cliente) {
+                cliente.nome = nome;
+                cliente.telefone = telefone;
+                cliente.documento = documento;
+                cliente.endereco = endereco;
+                cliente.observacoes = observacoes;
+            }
+
+            localStorage.setItem("clientes", JSON.stringify(clientes));
+
+            mostrarClientes();
+            mostrarObras();
+
+            modalCliente.classList.add("hidden");
+            clienteEditandoId = null;
+
+            document.querySelector("#modalCliente h2").textContent = "Novo cliente";
+            salvarCliente.textContent = "Salvar cliente";
+
+            limparFormularioCliente();
+            abrirCliente(cliente.id);
+            return;
+        }
+
+        // NOVO CLIENTE
+        const cliente = {
+            id: Date.now(),
+            nome: nome,
+            telefone: telefone,
+            documento: documento,
+            endereco: endereco,
+            observacoes: observacoes
+        };
+
+        clientes.push(cliente);
         localStorage.setItem("clientes", JSON.stringify(clientes));
 
         mostrarClientes();
-        mostrarObras();
-
         modalCliente.classList.add("hidden");
-
-        clienteEditandoId = null;
-
-        document.querySelector("#modalCliente h2").textContent = "Novo cliente";
-
-        salvarCliente.textContent = "Salvar cliente";
-
         limparFormularioCliente();
-
-        // Volta para a ficha do cliente
-        abrirCliente(cliente.id);
-
-        return;
-    }
-
-
-    // ==============================
-    // NOVO CLIENTE
-    // ==============================
-
-    const cliente = {
-        id: Date.now(),
-        nome: nome,
-        telefone: telefone,
-        documento: documento,
-        endereco: endereco,
-        observacoes: observacoes
-    };
-
-    clientes.push(cliente);
-
-    localStorage.setItem("clientes", JSON.stringify(clientes));
-
-    mostrarClientes();
-
-    modalCliente.classList.add("hidden");
-
-    limparFormularioCliente();
-
-});
+    });
+}
 
 // ==============================
 // MOSTRAR CLIENTES
 // ==============================
 
 function mostrarClientes() {
-
     const tabela = document.getElementById("listaClientes");
+    if (!tabela) return;
 
     tabela.innerHTML = "";
 
     const clientesOrdenados = [...clientes].sort((a, b) =>
-        String(a.nome || "").localeCompare(
-            String(b.nome || ""),
-            "pt-BR",
-            { sensitivity: "base" }
-        )
+        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
     );
 
     clientesOrdenados.forEach(cliente => {
-
         const linha = document.createElement("tr");
 
         linha.innerHTML = `
             <td>
-                <button
-                    class="cliente-link"
-                    onclick="abrirCliente(${cliente.id})">
+                <button class="cliente-link" onclick="abrirCliente(${cliente.id})">
                     ${cliente.nome}
                 </button>
             </td>
-
-            <td>${cliente.telefone}</td>
-
-            <td>${cliente.documento}</td>
-
-            <td>${cliente.endereco}</td>
-
+            <td>${cliente.telefone || "-"}</td>
+            <td>${cliente.documento || "-"}</td>
+            <td>${cliente.endereco || "-"}</td>
             <td>
-                <button
-                    class="secondary-button"
-                    onclick="excluirCliente(${cliente.id})">
+                <button class="secondary-button" onclick="excluirCliente(${cliente.id})">
                     Excluir
                 </button>
             </td>
@@ -200,24 +169,11 @@ function mostrarClientes() {
     atualizarTotalClientes();
 }
 
-// ==============================
-// EXCLUIR CLIENTE
-// ==============================
-
 function excluirCliente(id) {
-
-    const obrasVinculadas = obras.filter(
-        obra => obra.clienteId === id
-    );
+    const obrasVinculadas = obras.filter(obra => obra.clienteId === id);
 
     if (obrasVinculadas.length > 0) {
-
-        alert(
-            "Não é possível excluir este cliente porque existem " +
-            obrasVinculadas.length +
-            " obra(s) vinculada(s) a ele."
-        );
-
+        alert("Não é possível excluir este cliente porque existem " + obrasVinculadas.length + " obra(s) vinculada(s) a ele.");
         return;
     }
 
@@ -225,1775 +181,749 @@ function excluirCliente(id) {
         return;
     }
 
-    clientes = clientes.filter(
-        cliente => cliente.id !== id
-    );
-
-    localStorage.setItem(
-        "clientes",
-        JSON.stringify(clientes)
-    );
-
+    clientes = clientes.filter(cliente => cliente.id !== id);
+    localStorage.setItem("clientes", JSON.stringify(clientes));
     mostrarClientes();
 }
 
-// ==============================
-// CONTADOR
-// ==============================
-
 function atualizarTotalClientes() {
-
-    const total = clientes.length;
-
-    document.getElementById("totalClientes").textContent =
-        total === 1 ? "1 cliente" : total + " clientes";
+    const totalElement = document.getElementById("totalClientes");
+    if (totalElement) {
+        const total = clientes.length;
+        totalElement.textContent = total === 1 ? "1 cliente" : total + " clientes";
+    }
 }
 
-
-// ==============================
-// LIMPAR FORMULÁRIO
-// ==============================
-
 function limparFormularioCliente() {
-
     document.getElementById("nomeCliente").value = "";
     document.getElementById("telefoneCliente").value = "";
     document.getElementById("documentoCliente").value = "";
     document.getElementById("enderecoCliente").value = "";
     document.getElementById("observacoesCliente").value = "";
-
 }
 
 
 // ==============================
-// TELEFONE AUTOMÁTICO
+// MÁSCARAS AUTOMÁTICAS
 // ==============================
 
 const telefoneInput = document.getElementById("telefoneCliente");
+if (telefoneInput) {
+    telefoneInput.addEventListener("input", function() {
+        let numero = this.value.replace(/\D/g, "");
+        if (numero.length > 11) numero = numero.substring(0, 11);
 
-telefoneInput.addEventListener("input", function() {
-
-    let numero = this.value.replace(/\D/g, "");
-
-    if (numero.length > 11) {
-        numero = numero.substring(0, 11);
-    }
-
-    if (numero.length <= 10) {
-
-        numero = numero.replace(
-            /^(\d{2})(\d{0,4})(\d{0,4}).*/,
-            function(_, ddd, parte1, parte2) {
-
-                let resultado = "";
-
-                if (ddd) resultado = "(" + ddd;
-                if (ddd.length === 2) resultado += ") ";
-                if (parte1) resultado += parte1;
-                if (parte2) resultado += "-" + parte2;
-
-                return resultado;
-            }
-        );
-
-    } else {
-
-        numero = numero.replace(
-            /^(\d{2})(\d{5})(\d{0,4}).*/,
-            function(_, ddd, parte1, parte2) {
-
-                let resultado = "(" + ddd + ") " + parte1;
-
-                if (parte2) {
-                    resultado += "-" + parte2;
-                }
-
-                return resultado;
-            }
-        );
-    }
-
-    this.value = numero;
-
-});
-
-
-// ==============================
-// CPF / CNPJ AUTOMÁTICO
-// ==============================
+        if (numero.length <= 10) {
+            numero = numero.replace(/^(\d{2})(\d{0,4})(\d{0,4}).*/, function(_, ddd, p1, p2) {
+                let res = "";
+                if (ddd) res = "(" + ddd;
+                if (ddd.length === 2) res += ") ";
+                if (p1) res += p1;
+                if (p2) res += "-" + p2;
+                return res;
+            });
+        } else {
+            numero = numero.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, function(_, ddd, p1, p2) {
+                let res = "(" + ddd + ") " + p1;
+                if (p2) res += "-" + p2;
+                return res;
+            });
+        }
+        this.value = numero;
+    });
+}
 
 const documentoInput = document.getElementById("documentoCliente");
+if (documentoInput) {
+    documentoInput.addEventListener("input", function() {
+        let numero = this.value.replace(/\D/g, "");
+        if (numero.length > 14) numero = numero.substring(0, 14);
 
-documentoInput.addEventListener("input", function() {
-
-    let numero = this.value.replace(/\D/g, "");
-
-    if (numero.length > 14) {
-        numero = numero.substring(0, 14);
-    }
-
-    if (numero.length <= 11) {
-
-        numero = numero.replace(
-            /^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2}).*/,
-            function(_, p1, p2, p3, p4) {
-
-                let resultado = p1;
-
-                if (p2) resultado += "." + p2;
-                if (p3) resultado += "." + p3;
-                if (p4) resultado += "-" + p4;
-
-                return resultado;
-            }
-        );
-
-    } else {
-
-        numero = numero.replace(
-            /^(\d{2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2}).*/,
-            function(_, p1, p2, p3, p4, p5) {
-
-                let resultado = p1;
-
-                if (p2) resultado += "." + p2;
-                if (p3) resultado += "." + p3;
-                if (p4) resultado += "/" + p4;
-                if (p5) resultado += "-" + p5;
-
-                return resultado;
-            }
-        );
-    }
-
-    this.value = numero;
-
-});
-
-
-// ==============================
-// CARREGAR CLIENTES
-// ==============================
-
-mostrarClientes();
-// ==============================
-// PESQUISAR CLIENTES
-// ==============================
+        if (numero.length <= 11) {
+            numero = numero.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2}).*/, function(_, p1, p2, p3, p4) {
+                let res = p1;
+                if (p2) res += "." + p2;
+                if (p3) res += "." + p3;
+                if (p4) res += "-" + p4;
+                return res;
+            });
+        } else {
+            numero = numero.replace(/^(\d{2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2}).*/, function(_, p1, p2, p3, p4, p5) {
+                let res = p1;
+                if (p2) res += "." + p2;
+                if (p3) res += "." + p3;
+                if (p4) res += "/" + p4;
+                if (p5) res += "-" + p5;
+                return res;
+            });
+        }
+        this.value = numero;
+    });
+}
 
 const pesquisaCliente = document.getElementById("pesquisaCliente");
+if (pesquisaCliente) {
+    pesquisaCliente.addEventListener("input", function() {
+        const pesquisa = this.value.toLowerCase().trim();
+        const tabela = document.getElementById("listaClientes");
+        const linhas = tabela.querySelectorAll("tr");
 
-pesquisaCliente.addEventListener("input", function() {
-
-    const pesquisa = this.value.toLowerCase().trim();
-
-    const tabela = document.getElementById("listaClientes");
-
-    const linhas = tabela.querySelectorAll("tr");
-
-    linhas.forEach(linha => {
-
-        const texto = linha.textContent.toLowerCase();
-
-        if (texto.includes(pesquisa)) {
-            linha.style.display = "";
-        } else {
-            linha.style.display = "none";
-        }
-
+        linhas.forEach(linha => {
+            const texto = linha.textContent.toLowerCase();
+            linha.style.display = texto.includes(pesquisa) ? "" : "none";
+        });
     });
+}
 
-});
 
 // ==============================
 // ABRIR FICHA DO CLIENTE
 // ==============================
 
 function abrirCliente(id) {
+    const cliente = clientes.find(c => c.id === id);
+    if (!cliente) return;
 
-    const cliente = clientes.find(cliente => cliente.id === id);
-
-    if (!cliente) {
-        return;
-    }
-
-    // Esconde todas as páginas
-    pages.forEach(page => {
-        page.classList.add("hidden");
-    });
-
-    // Mostra a ficha
+    pages.forEach(page => page.classList.add("hidden"));
     document.getElementById("page-ficha-cliente").classList.remove("hidden");
 
-    // Preenche os dados
     document.getElementById("fichaNomeCliente").textContent = cliente.nome;
     document.getElementById("fichaTelefone").textContent = cliente.telefone || "-";
     document.getElementById("fichaDocumento").textContent = cliente.documento || "-";
     document.getElementById("fichaEndereco").textContent = cliente.endereco || "-";
-    document.getElementById("fichaObservacoes").textContent =
-        cliente.observacoes || "Nenhuma observação.";
-        const obrasCliente = obras.filter(
-    obra => obra.clienteId === cliente.id
-);
+    document.getElementById("fichaObservacoes").textContent = cliente.observacoes || "Nenhuma observação.";
 
-const containerObras = document.getElementById("obrasDoCliente");
+    // Obras do Cliente
+    const obrasCliente = obras.filter(obra => obra.clienteId === cliente.id);
+    const containerObras = document.getElementById("obrasDoCliente");
+    containerObras.innerHTML = "";
 
-containerObras.innerHTML = "";
-
-if (obrasCliente.length === 0) {
-
-    containerObras.innerHTML = `
-        <p>Nenhuma obra cadastrada para este cliente.</p>
-    `;
-
-} else {
-
-obrasCliente.forEach(obra => {
-
-    const obraDiv = document.createElement("div");
-
-    obraDiv.innerHTML = `
-        <div style="margin-bottom: 18px;">
-
-            <button
-                class="cliente-link"
-                onclick="abrirObra(${obra.id})">
-                🏗️ ${obra.nome}
-            </button>
-
-            <p style="margin: 6px 0; color: #94a3b8;">
-                📍 ${obra.endereco || "Endereço não informado"}
-            </p>
-
-            <p style="margin: 6px 0; color: #94a3b8;">
-                💰 ${Number(obra.valor || 0).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL"
-                })}
-            </p>
-
-            <p style="margin: 6px 0; color: #94a3b8;">
-                📅 ${
-                    obra.dataInicio
-                        ? new Date(obra.dataInicio + "T00:00:00")
-                            .toLocaleDateString("pt-BR")
-                        : "Data não informada"
-                }
-            </p>
-
-        </div>
-    `;
-
-    containerObras.appendChild(obraDiv);
-
-});
-const contratosCliente = contratos.filter(contrato => {
-
-    const obra = obras.find(
-        obra => obra.id === contrato.obraId
-    );
-
-    return obra && obra.clienteId === cliente.id;
-
-});
-
-const containerContratos =
-    document.getElementById("contratosDoCliente");
-
-containerContratos.innerHTML = "";
-
-if (contratosCliente.length === 0) {
-
-    containerContratos.innerHTML = `
-        <p>Nenhum contrato cadastrado para este cliente.</p>
-    `;
-
-} else {
-
-    contratosCliente.forEach(contrato => {
-
-        const obra = obras.find(
-            obra => obra.id === contrato.obraId
-        );
-
-        const contratoDiv = document.createElement("div");
-
-        contratoDiv.innerHTML = `
-            <div style="margin-bottom: 18px;">
-
-                <button
-                    class="cliente-link"
-                    onclick="abrirContrato(${contrato.id})">
-                    📄 ${contrato.nome}
-                </button>
-
-                <p style="margin: 6px 0; color: #94a3b8;">
-                    🏗️ ${obra ? obra.nome : "Obra não encontrada"}
-                </p>
-
-                <p style="margin: 6px 0; color: #94a3b8;">
-                    💰 ${Number(contrato.valor || 0).toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL"
-                    })}
-                </p>
-
-            </div>
-        `;
-
-        containerContratos.appendChild(contratoDiv);
-
-    });
-
-}
-}
-}
-// ==============================
-// VOLTAR PARA CLIENTES
-// ==============================
-
-const voltarClientes = document.getElementById("voltarClientes");
-
-voltarClientes.addEventListener("click", function() {
-
-    // Esconde a ficha
-    document.getElementById("page-ficha-cliente").classList.add("hidden");
-
-    // Mostra a tela de clientes
-    document.getElementById("page-clientes").classList.remove("hidden");
-
-});
-
-// ==============================
-// EDITAR CLIENTE
-// ==============================
-
-let clienteEditandoId = null;
-
-editarCliente.addEventListener("click", function() {
-
-    const nome = document.getElementById("fichaNomeCliente").textContent;
-
-    const cliente = clientes.find(cliente => cliente.nome === nome);
-
-    if (!cliente) {
-        return;
+    if (obrasCliente.length === 0) {
+        containerObras.innerHTML = "<p>Nenhuma obra cadastrada para este cliente.</p>";
+    } else {
+        obrasCliente.forEach(obra => {
+            const obraDiv = document.createElement("div");
+            obraDiv.style.marginBottom = "18px";
+            obraDiv.innerHTML = `
+                <button class="cliente-link" onclick="abrirObra(${obra.id})">🏗️ ${obra.nome}</button>
+                <p style="margin: 6px 0; color: #94a3b8;">📍 ${obra.endereco || "Endereço não informado"}</p>
+                <p style="margin: 6px 0; color: #94a3b8;">💰 ${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                <p style="margin: 6px 0; color: #94a3b8;">📅 ${obra.dataInicio ? new Date(obra.dataInicio + "T00:00:00").toLocaleDateString("pt-BR") : "Data não informada"}</p>
+            `;
+            containerObras.appendChild(obraDiv);
+        });
     }
 
-    clienteEditandoId = cliente.id;
+    // Contratos do Cliente
+    const contratosCliente = contratos.filter(contrato => {
+        const obra = obras.find(o => o.id === contrato.obraId);
+        return obra && obra.clienteId === cliente.id;
+    });
 
-    // Preenche o formulário
-    document.getElementById("nomeCliente").value = cliente.nome;
-    document.getElementById("telefoneCliente").value = cliente.telefone;
-    document.getElementById("documentoCliente").value = cliente.documento;
-    document.getElementById("enderecoCliente").value = cliente.endereco;
-    document.getElementById("observacoesCliente").value = cliente.observacoes;
+    const containerContratos = document.getElementById("contratosDoCliente");
+    containerContratos.innerHTML = "";
 
-    // Muda o título
-    document.querySelector("#modalCliente h2").textContent = "Editar cliente";
+    if (contratosCliente.length === 0) {
+        containerContratos.innerHTML = "<p>Nenhum contrato cadastrado para este cliente.</p>";
+    } else {
+        contratosCliente.forEach(contrato => {
+            const obra = obras.find(o => o.id === contrato.obraId);
+            const contratoDiv = document.createElement("div");
+            contratoDiv.style.marginBottom = "18px";
+            contratoDiv.innerHTML = `
+                <button class="cliente-link" onclick="abrirContrato(${contrato.id})">📄 ${contrato.nome}</button>
+                <p style="margin: 6px 0; color: #94a3b8;">🏗️ ${obra ? obra.nome : "Obra não encontrada"}</p>
+                <p style="margin: 6px 0; color: #94a3b8;">💰 ${Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+            `;
+            containerContratos.appendChild(contratoDiv);
+        });
+    }
+}
 
-    // Muda o botão
-    salvarCliente.textContent = "Salvar alterações";
+const voltarClientes = document.getElementById("voltarClientes");
+if (voltarClientes) {
+    voltarClientes.addEventListener("click", function() {
+        document.getElementById("page-ficha-cliente").classList.add("hidden");
+        document.getElementById("page-clientes").classList.remove("hidden");
+    });
+}
 
-    // Vai para a tela de clientes
-    document.getElementById("page-ficha-cliente").classList.add("hidden");
-    document.getElementById("page-clientes").classList.remove("hidden");
+if (editarCliente) {
+    editarCliente.addEventListener("click", function() {
+        const nome = document.getElementById("fichaNomeCliente").textContent;
+        const cliente = clientes.find(c => c.nome === nome);
+        if (!cliente) return;
 
-    // Abre o formulário
-    modalCliente.classList.remove("hidden");
+        clienteEditandoId = cliente.id;
+        document.getElementById("nomeCliente").value = cliente.nome;
+        document.getElementById("telefoneCliente").value = cliente.telefone || "";
+        document.getElementById("documentoCliente").value = cliente.documento || "";
+        document.getElementById("enderecoCliente").value = cliente.endereco || "";
+        document.getElementById("observacoesCliente").value = cliente.observacoes || "";
 
-});
+        document.querySelector("#modalCliente h2").textContent = "Editar cliente";
+        salvarCliente.textContent = "Salvar alterações";
+
+        document.getElementById("page-ficha-cliente").classList.add("hidden");
+        document.getElementById("page-clientes").classList.remove("hidden");
+        modalCliente.classList.remove("hidden");
+    });
+}
+
 
 // ==============================
-// OBRAS - ABRIR MODAL
+// OBRAS
 // ==============================
+
+let obras = JSON.parse(localStorage.getItem("obras")) || [];
 
 const btnNovaObra = document.getElementById("btnNovaObra");
 const modalObra = document.getElementById("modalObra");
 const fecharModalObra = document.getElementById("fecharModalObra");
 const cancelarObra = document.getElementById("cancelarObra");
 const clienteObra = document.getElementById("clienteObra");
-
-
-// Abrir formulário
-btnNovaObra.addEventListener("click", function() {
-
-    carregarClientesNaObra();
-
-    modalObra.classList.remove("hidden");
-
-});
-
-
-// Fechar no X
-fecharModalObra.addEventListener("click", function() {
-
-    modalObra.classList.add("hidden");
-
-});
-
-
-// Fechar no Cancelar
-cancelarObra.addEventListener("click", function() {
-
-    modalObra.classList.add("hidden");
-
-});
-
-
-// ==============================
-// CARREGAR CLIENTES
-// ==============================
-
-function carregarClientesNaObra() {
-
-    clienteObra.innerHTML = `
-        <option value="">Selecione o cliente</option>
-    `;
-
-    clientes.forEach(cliente => {
-
-        const option = document.createElement("option");
-
-        option.value = cliente.id;
-        option.textContent = cliente.nome;
-
-        clienteObra.appendChild(option);
-
-    });
-
-}
-
-// ==============================
-// SALVAR OBRA
-// ==============================
-
-let obras = JSON.parse(localStorage.getItem("obras")) || [];
-
 const salvarObra = document.getElementById("salvarObra");
 
-salvarObra.addEventListener("click", function() {
+if (btnNovaObra) {
+    btnNovaObra.addEventListener("click", function() {
+        carregarClientesNaObra();
+        modalObra.classList.remove("hidden");
+    });
+}
 
-    const nome = document.getElementById("nomeObra").value.trim();
-    const clienteId = document.getElementById("clienteObra").value;
-    const endereco = document.getElementById("enderecoObra").value.trim();
-    const dataInicio = document.getElementById("dataInicioObra").value;
-   const valorTexto = document.getElementById("valorObra").value;
+if (fecharModalObra) {
+    fecharModalObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
+}
 
-const valor = valorTexto
-    .replace("R$", "")
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .trim();
-    const observacoes = document.getElementById("observacoesObra").value.trim();
+if (cancelarObra) {
+    cancelarObra.addEventListener("click", function() { modalObra.classList.add("hidden"); });
+}
 
-    if (nome === "") {
-        alert("Digite o nome da obra.");
-        return;
-    }
+function carregarClientesNaObra() {
+    if (!clienteObra) return;
+    clienteObra.innerHTML = '<option value="">Selecione o cliente</option>';
+    clientes.forEach(cliente => {
+        const option = document.createElement("option");
+        option.value = cliente.id;
+        option.textContent = cliente.nome;
+        clienteObra.appendChild(option);
+    });
+}
 
-    if (clienteId === "") {
-        alert("Selecione o cliente.");
-        return;
-    }
+if (salvarObra) {
+    salvarObra.addEventListener("click", function() {
+        const nome = document.getElementById("nomeObra").value.trim();
+        const clienteId = document.getElementById("clienteObra").value;
+        const endereco = document.getElementById("enderecoObra").value.trim();
+        const dataInicio = document.getElementById("dataInicioObra").value;
+        const valorTexto = document.getElementById("valorObra").value;
+        const valor = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+        const observacoes = document.getElementById("observacoesObra").value.trim();
 
-    const cliente = clientes.find(
-        cliente => cliente.id === Number(clienteId)
-    );
+        if (nome === "") { alert("Digite o nome da obra."); return; }
+        if (clienteId === "") { alert("Selecione o cliente."); return; }
 
-  const obra = {
-    id: Date.now(),
-    nome: nome,
-    clienteId: Number(clienteId),
-    endereco: endereco,
-    dataInicio: dataInicio,
-    valor: valor,
-    observacoes: observacoes
-};
+        const obra = {
+            id: Date.now(),
+            nome: nome,
+            clienteId: Number(clienteId),
+            endereco: endereco,
+            dataInicio: dataInicio,
+            valor: Number(valor) || 0,
+            observacoes: observacoes
+        };
 
-    obras.push(obra);
-
-    localStorage.setItem("obras", JSON.stringify(obras));
-
-    modalObra.classList.add("hidden");
-
-    limparFormularioObra();
-
-    mostrarObras();
-
-});
-
-// ==============================
-// LIMPAR FORMULÁRIO DA OBRA
-// ==============================
+        obras.push(obra);
+        localStorage.setItem("obras", JSON.stringify(obras));
+        modalObra.classList.add("hidden");
+        limparFormularioObra();
+        mostrarObras();
+    });
+}
 
 function limparFormularioObra() {
-
     document.getElementById("nomeObra").value = "";
     document.getElementById("clienteObra").value = "";
     document.getElementById("enderecoObra").value = "";
     document.getElementById("dataInicioObra").value = "";
     document.getElementById("valorObra").value = "";
     document.getElementById("observacoesObra").value = "";
-
 }
 
-// ==============================
-// MOSTRAR OBRAS
-// ==============================
-
 function mostrarObras() {
-
     const tabela = document.getElementById("listaObras");
+    if (!tabela) return;
 
     tabela.innerHTML = "";
-
     const obrasOrdenadas = [...obras].sort((a, b) =>
-        String(a.nome || "").localeCompare(
-            String(b.nome || ""),
-            "pt-BR",
-            { sensitivity: "base" }
-        )
+        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
     );
 
     obrasOrdenadas.forEach(obra => {
-
+        const cliente = clientes.find(c => c.id === obra.clienteId);
         const linha = document.createElement("tr");
 
         linha.innerHTML = `
-            <td>
-                <button
-                    class="cliente-link"
-                    onclick="abrirObra(${obra.id})">
-                    ${obra.nome}
-                </button>
-            </td>
-
-            <td>
-                ${
-                    clientes.find(
-                        cliente => cliente.id === obra.clienteId
-                    )?.nome || "-"
-                }
-            </td>
-
-            <td>
-                ${obra.endereco || "-"}
-            </td>
-
-            <td>
-                ${
-                    Number(obra.valor || 0).toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL"
-                    })
-                }
-            </td>
-
-            <td>
-                <button
-                    class="secondary-button"
-                    onclick="excluirObra(${obra.id})">
-                    Excluir
-                </button>
-            </td>
+            <td><button class="cliente-link" onclick="abrirObra(${obra.id})">${obra.nome}</button></td>
+            <td>${cliente ? cliente.nome : "-"}</td>
+            <td>${obra.endereco || "-"}</td>
+            <td>${Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td><button class="secondary-button" onclick="excluirObra(${obra.id})">Excluir</button></td>
         `;
-
         tabela.appendChild(linha);
     });
 
     atualizarTotalObras();
 }
-// ==============================
-// CONTADOR DE OBRAS
-// ==============================
 
 function atualizarTotalObras() {
-
-    const total = obras.length;
-
-    document.getElementById("totalObras").textContent =
-        total === 1 ? "1 obra" : total + " obras";
+    const el = document.getElementById("totalObras");
+    if (el) el.textContent = obras.length === 1 ? "1 obra" : obras.length + " obras";
 }
 
-// ==============================
-// EXCLUIR OBRA
-// ==============================
-
 function excluirObra(id) {
-
-    if (!confirm("Deseja realmente excluir esta obra?")) {
-        return;
-    }
-
-    obras = obras.filter(obra => obra.id !== id);
-
+    if (!confirm("Deseja realmente excluir esta obra?")) return;
+    obras = obras.filter(o => o.id !== id);
     localStorage.setItem("obras", JSON.stringify(obras));
-
     mostrarObras();
 }
 
-// ==============================
-// CARREGAR OBRAS
-// ==============================
-
-mostrarObras();
-
-// ==============================
-// VALOR DA OBRA - FORMATAÇÃO
-// ==============================
-
 const valorObraInput = document.getElementById("valorObra");
-
-valorObraInput.addEventListener("input", function() {
-
-    let valor = this.value.replace(/\D/g, "");
-
-    if (valor === "") {
-        this.value = "";
-        return;
-    }
-
-    valor = (Number(valor) / 100).toFixed(2);
-
-    valor = Number(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
+if (valorObraInput) {
+    valorObraInput.addEventListener("input", function() {
+        let v = this.value.replace(/\D/g, "");
+        if (v === "") { this.value = ""; return; }
+        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     });
-
-    this.value = valor;
-
-});
-
-// ==============================
-// PESQUISAR OBRAS
-// ==============================
+}
 
 const pesquisaObra = document.getElementById("pesquisaObra");
-
-pesquisaObra.addEventListener("input", function() {
-
-    const pesquisa = this.value.toLowerCase().trim();
-
-    const tabela = document.getElementById("listaObras");
-
-    const linhas = tabela.querySelectorAll("tr");
-
-    linhas.forEach(linha => {
-
-        const texto = linha.textContent.toLowerCase();
-
-        if (texto.includes(pesquisa)) {
-            linha.style.display = "";
-        } else {
-            linha.style.display = "none";
-        }
-
+if (pesquisaObra) {
+    pesquisaObra.addEventListener("input", function() {
+        const pesquisa = this.value.toLowerCase().trim();
+        const tabela = document.getElementById("listaObras");
+        tabela.querySelectorAll("tr").forEach(linha => {
+            linha.style.display = linha.textContent.toLowerCase().includes(pesquisa) ? "" : "none";
+        });
     });
-
-});
-
-// ==============================
-// ABRIR FICHA DA OBRA
-// ==============================
+}
 
 function abrirObra(id) {
+    const obra = obras.find(o => o.id === id);
+    if (!obra) return;
 
-    const obra = obras.find(obra => obra.id === id);
-
-    if (!obra) {
-        return;
-    }
-
-    // Esconde todas as páginas
-    pages.forEach(page => {
-        page.classList.add("hidden");
-    });
-
-    // Mostra a ficha da obra
+    pages.forEach(p => p.classList.add("hidden"));
     document.getElementById("page-ficha-obra").classList.remove("hidden");
 
-    // Preenche os dados
-    document.getElementById("fichaNomeObra").textContent =
-        obra.nome;
-
-   const cliente = clientes.find(
-    cliente => cliente.id === obra.clienteId
-);
-
-const fichaCliente = document.getElementById("fichaClienteObra");
-
-if (cliente) {
-
-    fichaCliente.innerHTML = `
-        <button
-            class="cliente-link"
-            onclick="abrirCliente(${cliente.id})">
-            ${cliente.nome}
-        </button>
-    `;
-
-} else {
-
-    fichaCliente.textContent = "-";
-
+    document.getElementById("fichaNomeObra").textContent = obra.nome;
+    const cliente = clientes.find(c => c.id === obra.clienteId);
+    document.getElementById("fichaClienteObra").innerHTML = cliente
+        ? `<button class="cliente-link" onclick="abrirCliente(${cliente.id})">${cliente.nome}</button>`
+        : "-";
+    document.getElementById("fichaEnderecoObra").textContent = obra.endereco || "-";
+    document.getElementById("fichaDataObra").textContent = obra.dataInicio ? new Date(obra.dataInicio + "T00:00:00").toLocaleDateString("pt-BR") : "-";
+    document.getElementById("fichaValorObra").textContent = Number(obra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    document.getElementById("fichaObservacoesObra").textContent = obra.observacoes || "Nenhuma observação.";
 }
-
-    document.getElementById("fichaEnderecoObra").textContent =
-        obra.endereco || "-";
-
-    document.getElementById("fichaDataObra").textContent =
-        obra.dataInicio
-            ? new Date(obra.dataInicio + "T00:00:00").toLocaleDateString("pt-BR")
-            : "-";
-
-    document.getElementById("fichaValorObra").textContent =
-        Number(obra.valor || 0).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
-    document.getElementById("fichaObservacoesObra").textContent =
-        obra.observacoes || "Nenhuma observação.";
-
-}
-// ==============================
-// VOLTAR PARA OBRAS
-// ==============================
 
 const voltarObras = document.getElementById("voltarObras");
+if (voltarObras) {
+    voltarObras.addEventListener("click", function() {
+        document.getElementById("page-ficha-obra").classList.add("hidden");
+        document.getElementById("page-obras").classList.remove("hidden");
+    });
+}
 
-voltarObras.addEventListener("click", function() {
-
-    document.getElementById("page-ficha-obra").classList.add("hidden");
-
-    document.getElementById("page-obras").classList.remove("hidden");
-
-});
 
 // ==============================
-// CONTRATOS - ABRIR MODAL
+// CONTRATOS
 // ==============================
+
+let contratos = JSON.parse(localStorage.getItem("contratos")) || [];
+let contratoEditandoId = null;
 
 const btnNovoContrato = document.getElementById("btnNovoContrato");
 const modalContrato = document.getElementById("modalContrato");
 const fecharModalContrato = document.getElementById("fecharModalContrato");
 const cancelarContrato = document.getElementById("cancelarContrato");
 const obraContrato = document.getElementById("obraContrato");
-
-btnNovoContrato.addEventListener("click", function() {
-
-    carregarObrasNoContrato();
-
-    modalContrato.classList.remove("hidden");
-
-});
-
-fecharModalContrato.addEventListener("click", function() {
-
-    modalContrato.classList.add("hidden");
-
-});
-
-cancelarContrato.addEventListener("click", function() {
-
-    modalContrato.classList.add("hidden");
-
-});
-
-
-// ==============================
-// CARREGAR OBRAS NO CONTRATO
-// ==============================
-
-function carregarObrasNoContrato() {
-
-    obraContrato.innerHTML = `
-        <option value="">
-            Selecione a obra
-        </option>
-    `;
-
-    obras.forEach(obra => {
-
-        const option = document.createElement("option");
-
-        option.value = obra.id;
-        option.textContent = obra.nome;
-
-        obraContrato.appendChild(option);
-
-    });
-
-}
-
-// ==============================
-// FORMATAÇÃO DO VALOR DO CONTRATO
-// ==============================
-
-const valorContratoInput = document.getElementById("valorContrato");
-
-valorContratoInput.addEventListener("input", function() {
-
-    let valor = this.value.replace(/\D/g, "");
-
-    if (valor === "") {
-        this.value = "";
-        return;
-    }
-
-    valor = (Number(valor) / 100).toFixed(2);
-
-    valor = Number(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
-
-    this.value = valor;
-
-});
-
-// ==============================
-// SALVAR CONTRATO
-// ==============================
-
-let contratos = JSON.parse(localStorage.getItem("contratos")) || [];
-
 const salvarContrato = document.getElementById("salvarContrato");
 
-salvarContrato.addEventListener("click", function() {
-
-    const nome = document.getElementById("nomeContrato").value.trim();
-    const obraId = document.getElementById("obraContrato").value;
-    const data = document.getElementById("dataContrato").value;
-    const valorTexto = document.getElementById("valorContrato").value;
-    const observacoes = document.getElementById("observacoesContrato").value.trim();
-
-    if (nome === "") {
-        alert("Digite o nome do contrato.");
-        return;
-    }
-
-    
-
-    const valor = valorTexto
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .trim();
-
-    // EDITAR CONTRATO
-    if (contratoEditandoId !== null) {
-
-        const contrato = contratos.find(
-            contrato => contrato.id === contratoEditandoId
-        );
-
-        contrato.nome = nome;
-        contrato.obraId = Number(obraId);
-        contrato.data = data;
-        contrato.valor = valor;
-        contrato.observacoes = observacoes;
-
-        localStorage.setItem(
-            "contratos",
-            JSON.stringify(contratos)
-        );
-
+if (btnNovoContrato) {
+    btnNovoContrato.addEventListener("click", function() {
         contratoEditandoId = null;
+        carregarObrasNoContrato();
+        limparFormularioContrato();
+        document.querySelector("#modalContrato h2").textContent = "Novo contrato";
+        salvarContrato.textContent = "Salvar contrato";
+        modalContrato.classList.remove("hidden");
+    });
+}
 
-    } else {
+if (fecharModalContrato) fecharModalContrato.addEventListener("click", function() { modalContrato.classList.add("hidden"); });
+if (cancelarContrato) cancelarContrato.addEventListener("click", function() { modalContrato.classList.add("hidden"); });
 
-        // NOVO CONTRATO
-        const contrato = {
-            id: Date.now(),
-            nome: nome,
-            obraId: Number(obraId),
-            data: data,
-            valor: valor,
-            observacoes: observacoes
-        };
+function carregarObrasNoContrato() {
+    if (!obraContrato) return;
+    obraContrato.innerHTML = '<option value="">Selecione a obra</option>';
+    obras.forEach(obra => {
+        const option = document.createElement("option");
+        option.value = obra.id;
+        option.textContent = obra.nome;
+        obraContrato.appendChild(option);
+    });
+}
 
-        contratos.push(contrato);
+const valorContratoInput = document.getElementById("valorContrato");
+if (valorContratoInput) {
+    valorContratoInput.addEventListener("input", function() {
+        let v = this.value.replace(/\D/g, "");
+        if (v === "") { this.value = ""; return; }
+        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    });
+}
 
-        localStorage.setItem(
-            "contratos",
-            JSON.stringify(contratos)
-        );
+if (salvarContrato) {
+    salvarContrato.addEventListener("click", function() {
+        const nome = document.getElementById("nomeContrato").value.trim();
+        const obraId = document.getElementById("obraContrato").value;
+        const data = document.getElementById("dataContrato").value;
+        const valorTexto = document.getElementById("valorContrato").value;
+        const observacoes = document.getElementById("observacoesContrato").value.trim();
 
-    }
+        if (nome === "") { alert("Digite o nome do contrato."); return; }
 
-    modalContrato.classList.add("hidden");
+        const valor = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
 
-    limparFormularioContrato();
+        if (contratoEditandoId !== null) {
+            const contrato = contratos.find(c => c.id === contratoEditandoId);
+            if (contrato) {
+                contrato.nome = nome;
+                contrato.obraId = Number(obraId);
+                contrato.data = data;
+                contrato.valor = Number(valor) || 0;
+                contrato.observacoes = observacoes;
+            }
+            contratoEditandoId = null;
+        } else {
+            const contrato = {
+                id: Date.now(),
+                nome: nome,
+                obraId: Number(obraId),
+                data: data,
+                valor: Number(valor) || 0,
+                observacoes: observacoes
+            };
+            contratos.push(contrato);
+        }
 
-    mostrarContratos();
-
-    document.querySelector("#modalContrato h2").textContent =
-        "Novo contrato";
-
-    salvarContrato.textContent =
-        "Salvar contrato";
-
-});
-
-// ==============================
-// LIMPAR FORMULÁRIO DO CONTRATO
-// ==============================
+        localStorage.setItem("contratos", JSON.stringify(contratos));
+        modalContrato.classList.add("hidden");
+        limparFormularioContrato();
+        mostrarContratos();
+    });
+}
 
 function limparFormularioContrato() {
-
     document.getElementById("nomeContrato").value = "";
     document.getElementById("obraContrato").value = "";
     document.getElementById("dataContrato").value = "";
     document.getElementById("valorContrato").value = "";
     document.getElementById("observacoesContrato").value = "";
-
 }
 
-// ==============================
-// MOSTRAR CONTRATOS
-// ==============================
-
 function mostrarContratos(lista = contratos) {
-
     const tabela = document.getElementById("listaContratos");
+    if (!tabela) return;
 
     tabela.innerHTML = "";
-
-    const contratosOrdenados = [...lista].sort((a, b) =>
-        String(a.nome || "").localeCompare(
-            String(b.nome || ""),
-            "pt-BR",
-            { sensitivity: "base" }
-        )
+    const ordenados = [...lista].sort((a, b) =>
+        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
     );
 
-    contratosOrdenados.forEach(contrato => {
-
-        const obra = obras.find(
-            obra => obra.id === contrato.obraId
-        );
-
-        const cliente = obra
-            ? clientes.find(
-                cliente => cliente.id === obra.clienteId
-            )
-            : null;
+    ordenados.forEach(contrato => {
+        const obra = obras.find(o => o.id === contrato.obraId);
+        const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
 
         const linha = document.createElement("tr");
-
         linha.innerHTML = `
-            <td>
-                <button
-                    class="cliente-link"
-                    onclick="abrirContrato(${contrato.id})">
-                    ${contrato.nome}
-                </button>
-            </td>
-
-            <td>
-                ${obra ? obra.nome : "-"}
-            </td>
-
-            <td>
-                ${cliente ? cliente.nome : "-"}
-            </td>
-
-            <td>
-                ${Number(contrato.valor || 0).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL"
-                })}
-            </td>
-
-            <td>
-                <button
-                    class="secondary-button"
-                    onclick="excluirContrato(${contrato.id})">
-                    Excluir
-                </button>
-            </td>
+            <td><button class="cliente-link" onclick="abrirContrato(${contrato.id})">${contrato.nome}</button></td>
+            <td>${obra ? obra.nome : "-"}</td>
+            <td>${cliente ? cliente.nome : "-"}</td>
+            <td>${Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td><button class="secondary-button" onclick="excluirContrato(${contrato.id})">Excluir</button></td>
         `;
-
         tabela.appendChild(linha);
     });
 
     atualizarTotalContratos();
 }
 
-// ==============================
-// PESQUISA DE CONTRATOS
-// ==============================
-
-const pesquisaContrato =
-    document.getElementById("pesquisaContrato");
-
-pesquisaContrato.addEventListener("input", function() {
-
-    const pesquisa = this.value.toLowerCase().trim();
-
-    const contratosFiltrados = contratos.filter(contrato => {
-
-        const obra = obras.find(
-            obra => obra.id === contrato.obraId
-        );
-
-        const cliente = obra
-            ? clientes.find(
-                cliente => cliente.id === obra.clienteId
-            )
-            : null;
-
-        return (
-            String(contrato.nome || "")
-                .toLowerCase()
-                .includes(pesquisa) ||
-
-            String(obra?.nome || "")
-                .toLowerCase()
-                .includes(pesquisa) ||
-
-            String(cliente?.nome || "")
-                .toLowerCase()
-                .includes(pesquisa)
-        );
-    });
-
-    mostrarContratos(contratosFiltrados);
-});
-
-
-// ==============================
-// TOTAL DE CONTRATOS
-// ==============================
-
 function atualizarTotalContratos() {
-
-    const total = contratos.length;
-
-    document.getElementById("totalContratos").textContent =
-        total === 1
-            ? "1 contrato"
-            : total + " contratos";
+    const el = document.getElementById("totalContratos");
+    if (el) el.textContent = contratos.length === 1 ? "1 contrato" : contratos.length + " contratos";
 }
-
-// ==============================
-// EXCLUIR CONTRATO
-// ==============================
 
 function excluirContrato(id) {
-
-    if (!confirm("Deseja realmente excluir este contrato?")) {
-        return;
-    }
-
-    contratos = contratos.filter(
-        contrato => contrato.id !== id
-    );
-
-    localStorage.setItem(
-        "contratos",
-        JSON.stringify(contratos)
-    );
-
+    if (!confirm("Deseja realmente excluir este contrato?")) return;
+    contratos = contratos.filter(c => c.id !== id);
+    localStorage.setItem("contratos", JSON.stringify(contratos));
     mostrarContratos();
 }
-mostrarContratos();
-
-// ==============================
-// ABRIR FICHA DO CONTRATO
-// ==============================
 
 function abrirContrato(id) {
+    const contrato = contratos.find(c => c.id === id);
+    if (!contrato) return;
 
-    const contrato = contratos.find(
-        contrato => contrato.id === id
-    );
-
-    if (!contrato) {
-        return;
-    }
     contratoEditandoId = contrato.id;
-
-    pages.forEach(page => {
-        page.classList.add("hidden");
-    });
-
+    pages.forEach(p => p.classList.add("hidden"));
     document.getElementById("page-ficha-contrato").classList.remove("hidden");
 
-    document.getElementById("fichaNomeContrato").textContent =
-        contrato.nome;
+    document.getElementById("fichaNomeContrato").textContent = contrato.nome;
+    const obra = obras.find(o => o.id === contrato.obraId);
+    const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
 
-    const obra = obras.find(
-        obra => obra.id === contrato.obraId
-    );
-
-    const cliente = obra
-        ? clientes.find(cliente => cliente.id === obra.clienteId)
-        : null;
-
-    document.getElementById("fichaObraContrato").innerHTML =
-        obra
-            ? `<button
-                    class="cliente-link"
-                    onclick="abrirObra(${obra.id})">
-                    ${obra.nome}
-               </button>`
-            : "-";
-
-    document.getElementById("fichaClienteContrato").innerHTML =
-        cliente
-            ? `<button
-                    class="cliente-link"
-                    onclick="abrirCliente(${cliente.id})">
-                    ${cliente.nome}
-               </button>`
-            : "-";
-
-    document.getElementById("fichaDataContrato").textContent =
-        contrato.data
-            ? new Date(
-                contrato.data + "T00:00:00"
-            ).toLocaleDateString("pt-BR")
-            : "-";
-
-    document.getElementById("fichaValorContrato").textContent =
-        Number(contrato.valor || 0).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
-    document.getElementById("fichaObservacoesContrato").textContent =
-        contrato.observacoes || "Nenhuma observação.";
+    document.getElementById("fichaObraContrato").innerHTML = obra ? `<button class="cliente-link" onclick="abrirObra(${obra.id})">${obra.nome}</button>` : "-";
+    document.getElementById("fichaClienteContrato").innerHTML = cliente ? `<button class="cliente-link" onclick="abrirCliente(${cliente.id})">${cliente.nome}</button>` : "-";
+    document.getElementById("fichaDataContrato").textContent = contrato.data ? new Date(contrato.data + "T00:00:00").toLocaleDateString("pt-BR") : "-";
+    document.getElementById("fichaValorContrato").textContent = Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    document.getElementById("fichaObservacoesContrato").textContent = contrato.observacoes || "Nenhuma observação.";
 }
-
-// ==============================
-// VOLTAR PARA CONTRATOS
-// ==============================
-
-const voltarContratos = document.getElementById("voltarContratos");
-
-voltarContratos.addEventListener("click", function() {
-
-    document.getElementById("page-ficha-contrato").classList.add("hidden");
-
-    document.getElementById("page-contratos").classList.remove("hidden");
-
-});
-
-// ==============================
-// EDITAR CONTRATO
-// ==============================
-
-let contratoEditandoId = null;
 
 const editarContrato = document.getElementById("editarContrato");
+if (editarContrato) {
+    editarContrato.addEventListener("click", function() {
+        const contrato = contratos.find(c => c.id === contratoEditandoId);
+        if (!contrato) return;
 
-editarContrato.addEventListener("click", function() {
+        carregarObrasNoContrato();
+        document.getElementById("nomeContrato").value = contrato.nome;
+        document.getElementById("obraContrato").value = contrato.obraId;
+        document.getElementById("dataContrato").value = contrato.data;
+        document.getElementById("valorContrato").value = Number(contrato.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        document.getElementById("observacoesContrato").value = contrato.observacoes || "";
 
-    const contrato = contratos.find(
-        contrato => contrato.id === contratoEditandoId
-    );
+        document.querySelector("#modalContrato h2").textContent = "Editar contrato";
+        salvarContrato.textContent = "Salvar alterações";
 
-    if (!contrato) {
-        return;
-    }
+        document.getElementById("page-ficha-contrato").classList.add("hidden");
+        document.getElementById("page-contratos").classList.remove("hidden");
+        modalContrato.classList.remove("hidden");
+    });
+}
 
-    carregarObrasNoContrato();
+const voltarContratos = document.getElementById("voltarContratos");
+if (voltarContratos) {
+    voltarContratos.addEventListener("click", function() {
+        document.getElementById("page-ficha-contrato").classList.add("hidden");
+        document.getElementById("page-contratos").classList.remove("hidden");
+    });
+}
 
-    document.getElementById("nomeContrato").value =
-        contrato.nome;
 
-    document.getElementById("obraContrato").value =
-        contrato.obraId;
+// ==============================
+// LANÇAMENTOS (FINANCEIRO)
+// ==============================
 
-    document.getElementById("dataContrato").value =
-        contrato.data;
-
-    document.getElementById("valorContrato").value =
-        Number(contrato.valor || 0).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
-    document.getElementById("observacoesContrato").value =
-        contrato.observacoes || "";
-
-    document.querySelector("#modalContrato h2").textContent =
-        "Editar contrato";
-
-    document.getElementById("salvarContrato").textContent =
-        "Salvar alterações";
-
-    document.getElementById("page-ficha-contrato").classList.add("hidden");
-
-    document.getElementById("page-contratos").classList.remove("hidden");
-
-    modalContrato.classList.remove("hidden");
-
-});
+let lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
 
 const btnNovoLancamento = document.getElementById("btnNovoLancamento");
-
 const modalLancamento = document.getElementById("modalLancamento");
+const fecharModalLancamento = document.getElementById("fecharModalLancamento");
+const cancelarLancamento = document.getElementById("cancelarLancamento");
+const salvarLancamento = document.getElementById("salvarLancamento");
+const obraLancamento = document.getElementById("obraLancamento");
 
-const fecharModalLancamento =
-    document.getElementById("fecharModalLancamento");
-
-const cancelarLancamento =
-    document.getElementById("cancelarLancamento");
-
-
-btnNovoLancamento.addEventListener("click", function() {
-
-    carregarObrasNoLancamento();
-
-    modalLancamento.classList.remove("hidden");
-
-});
-
-
-fecharModalLancamento.addEventListener("click", function() {
-
-    modalLancamento.classList.add("hidden");
-
-});
-
-
-cancelarLancamento.addEventListener("click", function() {
-
-    modalLancamento.classList.add("hidden");
-
-});
-
-const valorLancamentoInput =
-    document.getElementById("valorLancamento");
-
-valorLancamentoInput.addEventListener("input", function() {
-
-    let valor = this.value.replace(/\D/g, "");
-
-    if (valor === "") {
-        this.value = "";
-        return;
-    }
-
-    valor = (Number(valor) / 100).toFixed(2);
-
-    valor = Number(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
+if (btnNovoLancamento) {
+    btnNovoLancamento.addEventListener("click", function() {
+        carregarObrasNoLancamento();
+        modalLancamento.classList.remove("hidden");
     });
+}
 
-    this.value = valor;
-
-});
-
-const obraLancamento =
-    document.getElementById("obraLancamento");
+if (fecharModalLancamento) fecharModalLancamento.addEventListener("click", function() { modalLancamento.classList.add("hidden"); });
+if (cancelarLancamento) cancelarLancamento.addEventListener("click", function() { modalLancamento.classList.add("hidden"); });
 
 function carregarObrasNoLancamento() {
-
-    obraLancamento.innerHTML = `
-    <option value="geral">
-        🏢 Geral / Caixa
-    </option>
-`;
-
+    if (!obraLancamento) return;
+    obraLancamento.innerHTML = '<option value="geral">🏢 Geral / Caixa</option>';
     obras.forEach(obra => {
-
         const option = document.createElement("option");
-
         option.value = obra.id;
         option.textContent = obra.nome;
-
         obraLancamento.appendChild(option);
-
     });
-
 }
 
-let lancamentos = JSON.parse(
-    localStorage.getItem("lancamentos")
-) || [];
+const valorLancamentoInput = document.getElementById("valorLancamento");
+if (valorLancamentoInput) {
+    valorLancamentoInput.addEventListener("input", function() {
+        let v = this.value.replace(/\D/g, "");
+        if (v === "") { this.value = ""; return; }
+        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    });
+}
 
-const salvarLancamento =
-    document.getElementById("salvarLancamento");
+if (salvarLancamento) {
+    salvarLancamento.addEventListener("click", function() {
+        const descricao = document.getElementById("descricaoLancamento").value.trim();
+        const tipo = document.getElementById("tipoLancamento").value;
+        const obraId = document.getElementById("obraLancamento").value;
+        const data = document.getElementById("dataLancamento").value;
+        const valorTexto = document.getElementById("valorLancamento").value;
+        const observacoes = document.getElementById("observacoesLancamento").value.trim();
 
+        if (descricao === "") { alert("Digite a descrição do lançamento."); return; }
+        if (obraId === "") { alert("Selecione a obra."); return; }
+        if (valorTexto === "") { alert("Digite o valor."); return; }
 
-salvarLancamento.addEventListener("click", function() {
+        const valor = valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
 
-    const descricao =
-        document.getElementById("descricaoLancamento").value.trim();
+        const lancamento = {
+            id: Date.now(),
+            descricao: descricao,
+            tipo: tipo,
+            obraId: obraId === "geral" ? "geral" : Number(obraId),
+            data: data,
+            valor: Number(valor) || 0,
+            observacoes: observacoes
+        };
 
-    const tipo =
-        document.getElementById("tipoLancamento").value;
-
-    const obraId =
-        document.getElementById("obraLancamento").value;
-
-    const data =
-        document.getElementById("dataLancamento").value;
-
-    const valorTexto =
-        document.getElementById("valorLancamento").value;
-
-    const observacoes =
-        document.getElementById("observacoesLancamento").value.trim();
-
-
-    if (descricao === "") {
-        alert("Digite a descrição do lançamento.");
-        return;
-    }
-
-
-    if (obraId === "") {
-        alert("Selecione a obra.");
-        return;
-    }
-
-
-    if (valorTexto === "") {
-        alert("Digite o valor.");
-        return;
-    }
-
-
-    const valor = valorTexto
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .trim();
-
-
-    const lancamento = {
-
-        id: Date.now(),
-
-        descricao: descricao,
-
-        tipo: tipo,
-
-        obraId: Number(obraId),
-
-        data: data,
-
-        valor: valor,
-
-        observacoes: observacoes
-
-    };
-
-
-    lancamentos.push(lancamento);
-
-
-    localStorage.setItem(
-        "lancamentos",
-        JSON.stringify(lancamentos)
-    );
-
-
-    modalLancamento.classList.add("hidden");
-
-
-    limparFormularioLancamento();
-
-    mostrarLancamentos();
-
-});
+        lancamentos.push(lancamento);
+        localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+        modalLancamento.classList.add("hidden");
+        limparFormularioLancamento();
+        mostrarLancamentos();
+    });
+}
 
 function limparFormularioLancamento() {
-
     document.getElementById("descricaoLancamento").value = "";
-
     document.getElementById("tipoLancamento").value = "receita";
-
-    document.getElementById("obraLancamento").value = "";
-
+    document.getElementById("obraLancamento").value = "geral";
     document.getElementById("dataLancamento").value = "";
-
     document.getElementById("valorLancamento").value = "";
-
     document.getElementById("observacoesLancamento").value = "";
-
 }
 
- function mostrarLancamentos(lista = lancamentos) {
-
-    const tabela =
-        document.getElementById("listaLancamentos");
+function mostrarLancamentos(lista = lancamentos) {
+    const tabela = document.getElementById("listaLancamentos");
+    if (!tabela) return;
 
     tabela.innerHTML = "";
-
-    // Ordenar lançamentos por descrição A → Z
-    const lancamentosOrdenados = [...lista].sort((a, b) =>
-        String(a.descricao || "").localeCompare(
-            String(b.descricao || ""),
-            "pt-BR",
-            { sensitivity: "base" }
-        )
+    const ordenados = [...lista].sort((a, b) =>
+        String(a.descricao || "").localeCompare(String(b.descricao || ""), "pt-BR", { sensitivity: "base" })
     );
 
-    lancamentosOrdenados.forEach(lancamento => {
-
-        const obra = obras.find(
-            obra => obra.id === Number(lancamento.obraId)
-        );
-
-        const cliente = obra
-            ? clientes.find(
-                cliente => cliente.id === obra.clienteId
-            )
-            : null;
-
-        let destino = "🏢 Geral / Caixa";
-
-        if (
-            lancamento.obraId !== "geral" &&
-            lancamento.obraId !== "" &&
-            obra
-        ) {
-            destino = "🏗️ " + obra.nome;
-        }
+    ordenados.forEach(lancamento => {
+        const obra = obras.find(o => o.id === Number(lancamento.obraId));
+        const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
+        let destino = (lancamento.obraId !== "geral" && obra) ? "🏗️ " + obra.nome : "🏢 Geral / Caixa";
 
         const linha = document.createElement("tr");
-
         linha.innerHTML = `
-            <td>
-                ${lancamento.descricao}
-            </td>
-
-            <td>
-                ${
-                    lancamento.tipo === "receita"
-                        ? "Receita"
-                        : "Despesa"
-                }
-            </td>
-
-            <td>
-                ${destino}
-            </td>
-
-            <td>
-                ${cliente ? cliente.nome : "-"}
-            </td>
-
-            <td>
-                ${
-                    Number(lancamento.valor || 0)
-                        .toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL"
-                        })
-                }
-            </td>
-
-            <td>
-                ${
-                    lancamento.data
-                        ? new Date(
-                            lancamento.data + "T00:00:00"
-                        ).toLocaleDateString("pt-BR")
-                        : "-"
-                }
-            </td>
-
-            <td>
-                <button
-                    class="secondary-button"
-                    onclick="excluirLancamento(${lancamento.id})">
-                    Excluir
-                </button>
-            </td>
+            <td>${lancamento.descricao}</td>
+            <td>${lancamento.tipo === "receita" ? "Receita" : "Despesa"}</td>
+            <td>${destino}</td>
+            <td>${cliente ? cliente.nome : "-"}</td>
+            <td>${Number(lancamento.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td>${lancamento.data ? new Date(lancamento.data + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</td>
+            <td><button class="secondary-button" onclick="excluirLancamento(${lancamento.id})">Excluir</button></td>
         `;
-
         tabela.appendChild(linha);
     });
 
     atualizarTotalLancamentos();
 }
 
-
-// ==============================
-// PESQUISAR LANÇAMENTOS
-// ==============================
-
-const pesquisaLancamento =
-    document.getElementById("pesquisaLancamento");
-
-pesquisaLancamento.addEventListener("input", function() {
-
-    const pesquisa =
-        this.value.toLowerCase().trim();
-
-    const lancamentosFiltrados =
-        lancamentos.filter(lancamento => {
-
-            const obra = obras.find(
-                obra => obra.id === Number(lancamento.obraId)
-            );
-
-            const cliente = obra
-                ? clientes.find(
-                    cliente => cliente.id === obra.clienteId
-                )
-                : null;
-
-            return (
-                String(lancamento.descricao || "")
-                    .toLowerCase()
-                    .includes(pesquisa) ||
-
-                String(lancamento.tipo || "")
-                    .toLowerCase()
-                    .includes(pesquisa) ||
-
-                String(obra?.nome || "")
-                    .toLowerCase()
-                    .includes(pesquisa) ||
-
-                String(cliente?.nome || "")
-                    .toLowerCase()
-                    .includes(pesquisa)
-            );
-        });
-
-    // A pesquisa também fica em ordem A → Z
-    mostrarLancamentos(lancamentosFiltrados);
-});
-
-
-// ==============================
-// ATUALIZAR TOTAL FINANCEIRO
-// ==============================
-
 function atualizarTotalLancamentos() {
-
-    const total = lancamentos.length;
-
-    document.getElementById("totalLancamentos").textContent =
-        total === 1
-            ? "1 lançamento"
-            : total + " lançamentos";
-
+    const el = document.getElementById("totalLancamentos");
+    if (el) el.textContent = lancamentos.length === 1 ? "1 lançamento" : lancamentos.length + " lançamentos";
 
     let receitas = 0;
     let despesas = 0;
 
-
-    lancamentos.forEach(lancamento => {
-
-        const valor =
-            Number(lancamento.valor || 0);
-
-
-        if (lancamento.tipo === "receita") {
-            receitas += valor;
-        }
-
-
-        if (lancamento.tipo === "despesa") {
-            despesas += valor;
-        }
-
-    });
-
-
-    const saldo =
-        receitas - despesas;
-
-
-    document.getElementById("totalReceitas").textContent =
-        receitas.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
-
-    document.getElementById("totalDespesas").textContent =
-        despesas.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
-
-    document.getElementById("saldoFinanceiro").textContent =
-        saldo.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-}
-function excluirLancamento(id) {
-
-    if (!confirm("Deseja realmente excluir este lançamento?")) {
-        return;
-    }
-
-    lancamentos = lancamentos.filter(
-        lancamento => lancamento.id !== id
-    );
-
-    localStorage.setItem(
-        "lancamentos",
-        JSON.stringify(lancamentos)
-    );
-
-    mostrarLancamentos();
-   
-
-}
-function atualizarResumoFinanceiro() {
-
-    let receitas = 0;
-    let despesas = 0;
-
-    lancamentos.forEach(lancamento => {
-
-        const valor = Number(lancamento.valor || 0);
-
-        if (lancamento.tipo === "receita") {
-            receitas += valor;
-        }
-
-        if (lancamento.tipo === "despesa") {
-            despesas += valor;
-        }
-
+    lancamentos.forEach(l => {
+        const v = Number(l.valor || 0);
+        if (l.tipo === "receita") receitas += v;
+        if (l.tipo === "despesa") despesas += v;
     });
 
     const saldo = receitas - despesas;
 
-    document.getElementById("totalReceitas").textContent =
-        receitas.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
+    const elRec = document.getElementById("totalReceitas");
+    const elDes = document.getElementById("totalDespesas");
+    const elSal = document.getElementById("saldoFinanceiro");
 
-    document.getElementById("totalDespesas").textContent =
-        despesas.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
-    document.getElementById("saldoFinanceiro").textContent =
-        saldo.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
-
+    if (elRec) elRec.textContent = receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elDes) elDes.textContent = despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (elSal) elSal.textContent = saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-mostrarLancamentos();
+
+function excluirLancamento(id) {
+    if (!confirm("Deseja realmente excluir este lançamento?")) return;
+    lancamentos = lancamentos.filter(l => l.id !== id);
+    localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+    mostrarLancamentos();
+}
+
+
+// ==============================
+// MATERIAIS E ESTOQUE
+// ==============================
+
+let materiais = JSON.parse(localStorage.getItem("materiais")) || [];
 
 const btnNovoMaterial = document.getElementById("btnNovoMaterial");
 const modalMaterial = document.getElementById("modalMaterial");
 const fecharModalMaterial = document.getElementById("fecharModalMaterial");
 const cancelarMaterial = document.getElementById("cancelarMaterial");
+const salvarMaterial = document.getElementById("salvarMaterial");
 
-btnNovoMaterial.addEventListener("click", function() {
-    modalMaterial.classList.remove("hidden");
-});
+if (btnNovoMaterial) btnNovoMaterial.addEventListener("click", () => modalMaterial.classList.remove("hidden"));
+if (fecharModalMaterial) fecharModalMaterial.addEventListener("click", () => modalMaterial.classList.add("hidden"));
+if (cancelarMaterial) cancelarMaterial.addEventListener("click", () => modalMaterial.classList.add("hidden"));
 
-fecharModalMaterial.addEventListener("click", function() {
-    modalMaterial.classList.add("hidden");
-});
-
-cancelarMaterial.addEventListener("click", function() {
-    modalMaterial.classList.add("hidden");
-});
-
-let materiais = JSON.parse(
-    localStorage.getItem("materiais")
-) || [];
-
-const salvarMaterial =
-    document.getElementById("salvarMaterial");
-
-    const precoMaterialInput =
-    document.getElementById("precoMaterial");
-
-precoMaterialInput.addEventListener("input", function() {
-
-    let valor = this.value.replace(/\D/g, "");
-
-    if (valor === "") {
-        this.value = "";
-        return;
-    }
-
-    valor = (Number(valor) / 100).toFixed(2);
-
-    this.value = Number(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
+const precoMaterialInput = document.getElementById("precoMaterial");
+if (precoMaterialInput) {
+    precoMaterialInput.addEventListener("input", function() {
+        let v = this.value.replace(/\D/g, "");
+        if (v === "") { this.value = ""; return; }
+        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     });
-});
+}
 
-salvarMaterial.addEventListener("click", function() {
+if (salvarMaterial) {
+    salvarMaterial.addEventListener("click", function() {
+        const nome = document.getElementById("nomeMaterial").value.trim();
+        const categoria = document.getElementById("categoriaMaterial").value.trim();
+        const unidade = document.getElementById("unidadeMaterial").value;
+        const quantidade = document.getElementById("quantidadeMaterial").value;
+        const precoTexto = document.getElementById("precoMaterial").value;
 
-    const nome =
-        document.getElementById("nomeMaterial").value.trim();
+        if (nome === "") { alert("Digite o nome do material."); return; }
+        if (quantidade === "") { alert("Digite a quantidade."); return; }
 
-    const categoria =
-        document.getElementById("categoriaMaterial").value.trim();
+        const preco = precoTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
 
-    const unidade =
-        document.getElementById("unidadeMaterial").value;
+        const material = {
+            id: Date.now(),
+            nome: nome,
+            categoria: categoria,
+            unidade: unidade,
+            quantidade: Number(quantidade),
+            preco: Number(preco) || 0
+        };
 
-    const quantidade =
-        document.getElementById("quantidadeMaterial").value;
-
-    const precoTexto =
-        document.getElementById("precoMaterial").value;
-
-    if (nome === "") {
-        alert("Digite o nome do material.");
-        return;
-    }
-
-    if (quantidade === "") {
-        alert("Digite a quantidade.");
-        return;
-    }
-
-    if (precoTexto === "") {
-        alert("Digite o preço.");
-        return;
-    }
-
-    const preco = precoTexto
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .trim();
-
-    const material = {
-        id: Date.now(),
-        nome: nome,
-        categoria: categoria,
-        unidade: unidade,
-        quantidade: Number(quantidade),
-        preco: Number(preco)
-    };
-
-    materiais.push(material);
-
-    localStorage.setItem(
-        "materiais",
-        JSON.stringify(materiais)
-    );
-
-    modalMaterial.classList.add("hidden");
-
-    limparFormularioMaterial();
-
-    mostrarMateriais();
-});
+        materiais.push(material);
+        localStorage.setItem("materiais", JSON.stringify(materiais));
+        modalMaterial.classList.add("hidden");
+        limparFormularioMaterial();
+        mostrarMateriais();
+    });
+}
 
 function limparFormularioMaterial() {
-
     document.getElementById("nomeMaterial").value = "";
     document.getElementById("categoriaMaterial").value = "";
     document.getElementById("unidadeMaterial").value = "un";
@@ -2001,839 +931,222 @@ function limparFormularioMaterial() {
     document.getElementById("precoMaterial").value = "";
 }
 
-// ==============================
-// MOSTRAR MATERIAIS
-// ==============================
-
 function mostrarMateriais() {
-
-    const tabela =
-        document.getElementById("listaMateriais");
+    const tabela = document.getElementById("listaMateriais");
+    if (!tabela) return;
 
     tabela.innerHTML = "";
-
-    const materiaisOrdenados = [...materiais].sort((a, b) =>
-        String(a.nome || "").localeCompare(
-            String(b.nome || ""),
-            "pt-BR",
-            { sensitivity: "base" }
-        )
+    const ordenados = [...materiais].sort((a, b) =>
+        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
     );
 
-    materiaisOrdenados.forEach(material => {
-
+    ordenados.forEach(material => {
         const linha = document.createElement("tr");
-
         linha.innerHTML = `
+            <td>${material.nome}</td>
+            <td>${material.categoria || "-"}</td>
+            <td>${material.quantidade}</td>
+            <td>${material.unidade}</td>
+            <td>${Number(material.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
             <td>
-                ${material.nome}
+                <button class="secondary-button" onclick="excluirMaterial(${material.id})">Excluir</button>
             </td>
-
-            <td>
-                ${material.categoria || "-"}
-            </td>
-
-            <td>
-                ${material.quantidade}
-            </td>
-
-            <td>
-                ${material.unidade}
-            </td>
-
-            <td>
-                ${
-                    Number(material.preco || 0)
-                        .toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL"
-                        })
-                }
-            </td>
-
-           <td>
-
-    <button
-        class="secondary-button"
-        onclick="abrirSaidaMaterial(${material.id})">
-        ➖ Saída
-    </button>
-
-    <button
-        class="secondary-button"
-        onclick="excluirMaterial(${material.id})">
-        Excluir
-    </button>
-
-</td>
         `;
-
         tabela.appendChild(linha);
     });
 
     atualizarTotalMateriais();
 }
 
-
-// ==============================
-// ATUALIZAR TOTAL DE MATERIAIS
-// ==============================
-
 function atualizarTotalMateriais() {
-
-    const total = materiais.length;
-
-    document.getElementById("totalMateriais").textContent =
-        total === 1
-            ? "1 material"
-            : total + " materiais";
+    const el = document.getElementById("totalMateriais");
+    if (el) el.textContent = materiais.length === 1 ? "1 material" : materiais.length + " materiais";
 }
 
-
-// ==============================
-// EXCLUIR MATERIAL
-// ==============================
-
 function excluirMaterial(id) {
-
-    if (!confirm("Deseja realmente excluir este material?")) {
-        return;
-    }
-
-    materiais = materiais.filter(
-        material => material.id !== id
-    );
-
-    localStorage.setItem(
-        "materiais",
-        JSON.stringify(materiais)
-    );
-
+    if (!confirm("Deseja realmente excluir este material?")) return;
+    materiais = materiais.filter(m => m.id !== id);
+    localStorage.setItem("materiais", JSON.stringify(materiais));
     mostrarMateriais();
 }
 
-
-// ==============================
-// CARREGAR MATERIAIS
-// ==============================
-
-mostrarMateriais();
-
-
-// ==============================
-// PESQUISAR MATERIAL
-// ==============================
-
-const pesquisaMaterial =
-    document.getElementById("pesquisaMaterial");
-
-pesquisaMaterial.addEventListener("input", function() {
-
-    const pesquisa =
-        this.value.toLowerCase().trim();
-
-    const materiaisFiltrados =
-        materiais.filter(material => {
-
-            return (
-                String(material.nome || "")
-                    .toLowerCase()
-                    .includes(pesquisa)
-
-                ||
-
-                String(material.categoria || "")
-                    .toLowerCase()
-                    .includes(pesquisa)
-            );
-        });
-
-
-    // Ordena também os resultados da pesquisa
-    const materiaisOrdenados =
-        [...materiaisFiltrados].sort((a, b) =>
-            String(a.nome || "").localeCompare(
-                String(b.nome || ""),
-                "pt-BR",
-                { sensitivity: "base" }
-            )
-        );
-
-
-    const tabela =
-        document.getElementById("listaMateriais");
-
-    tabela.innerHTML = "";
-
-
-    materiaisOrdenados.forEach(material => {
-
-        const linha =
-            document.createElement("tr");
-
-        linha.innerHTML = `
-            <td>
-                ${material.nome}
-            </td>
-
-            <td>
-                ${material.categoria || "-"}
-            </td>
-
-            <td>
-                ${material.quantidade}
-            </td>
-
-            <td>
-                ${material.unidade}
-            </td>
-
-            <td>
-                ${
-                    Number(material.preco || 0)
-                        .toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL"
-                        })
-                }
-            </td>
-
-            <td>
-                <button
-                    class="secondary-button"
-                    onclick="excluirMaterial(${material.id})">
-                    Excluir
-                </button>
-            </td>
-        `;
-
-        tabela.appendChild(linha);
-    });
-});
 
 // ==============================
 // COMPRAS
 // ==============================
 
-let compras =
-    JSON.parse(localStorage.getItem("compras")) || [];
+let compras = JSON.parse(localStorage.getItem("compras")) || [];
 
+const btnNovaCompra = document.getElementById("btnNovaCompra");
+const modalCompra = document.getElementById("modalCompra");
+const fecharModalCompra = document.getElementById("fecharModalCompra");
+const cancelarCompra = document.getElementById("cancelarCompra");
+const salvarCompra = document.getElementById("salvarCompra");
 
-// ==============================
-// ELEMENTOS
-// ==============================
+if (btnNovaCompra) {
+    btnNovaCompra.addEventListener("click", function() {
+        preencherMateriaisCompra();
+        modalCompra.classList.remove("hidden");
+    });
+}
 
-const btnNovaCompra =
-    document.getElementById("btnNovaCompra");
-
-const modalCompra =
-    document.getElementById("modalCompra");
-
-const fecharModalCompra =
-    document.getElementById("fecharModalCompra");
-
-const cancelarCompra =
-    document.getElementById("cancelarCompra");
-
-const salvarCompra =
-    document.getElementById("salvarCompra");
-
-
-// ==============================
-// ABRIR MODAL
-// ==============================
-
-btnNovaCompra.addEventListener("click", function() {
-
-    preencherMateriaisCompra();
-
-    modalCompra.classList.remove("hidden");
-
-});
-
-
-// ==============================
-// FECHAR MODAL
-// ==============================
-
-fecharModalCompra.addEventListener("click", function() {
-
-    modalCompra.classList.add("hidden");
-
-});
-
-
-cancelarCompra.addEventListener("click", function() {
-
-    modalCompra.classList.add("hidden");
-
-});
-
-
-// ==============================
-// MATERIAIS DA COMPRA
-// ==============================
+if (fecharModalCompra) fecharModalCompra.addEventListener("click", () => modalCompra.classList.add("hidden"));
+if (cancelarCompra) cancelarCompra.addEventListener("click", () => modalCompra.classList.add("hidden"));
 
 function preencherMateriaisCompra() {
+    const select = document.getElementById("materialCompra");
+    if (!select) return;
 
-    const select =
-        document.getElementById("materialCompra");
+    select.innerHTML = '<option value="">Selecione o material</option>';
+    const ordenados = [...materiais].sort((a, b) =>
+        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
+    );
 
-    select.innerHTML = `
-        <option value="">
-            Selecione o material
-        </option>
-    `;
-
-    const materiaisOrdenados =
-        [...materiais].sort((a, b) =>
-            String(a.nome || "").localeCompare(
-                String(b.nome || ""),
-                "pt-BR",
-                { sensitivity: "base" }
-            )
-        );
-
-    materiaisOrdenados.forEach(material => {
-
-        const option =
-            document.createElement("option");
-
-        option.value =
-            material.id;
-
-        option.textContent =
-            material.nome;
-
+    ordenados.forEach(material => {
+        const option = document.createElement("option");
+        option.value = material.id;
+        option.textContent = material.nome;
         select.appendChild(option);
-
     });
 
-    // Opção para materiais que não estão no estoque
-    const optionOutros =
-        document.createElement("option");
-
+    const optionOutros = document.createElement("option");
     optionOutros.value = "outros";
-
     optionOutros.textContent = "Outros";
-
     select.appendChild(optionOutros);
 }
 
-// ==============================
-// FORMATAR VALOR
-// ==============================
-
-const valorCompra =
-    document.getElementById("valorCompra");
-
-valorCompra.addEventListener("input", function() {
-
-    let valor =
-        this.value.replace(/\D/g, "");
-
-    if (valor === "") {
-
-        this.value = "";
-
-        return;
-    }
-
-    valor =
-        (Number(valor) / 100).toFixed(2);
-
-    this.value =
-        Number(valor).toLocaleString(
-            "pt-BR",
-            {
-                style: "currency",
-                currency: "BRL"
-            }
-        );
-
-});
-
-
-salvarCompra.addEventListener("click", function() {
-
-    const nome =
-        document.getElementById("nomeCompra")
-            .value.trim();
-
-    const fornecedor =
-        document.getElementById("fornecedorCompra")
-            .value.trim();
-
-    const materialId =
-        document.getElementById("materialCompra")
-            .value;
-
-    const quantidade =
-        document.getElementById("quantidadeCompra")
-            .value;
-
-    const valorTexto =
-        document.getElementById("valorCompra")
-            .value;
-
-    const data =
-        document.getElementById("dataCompra")
-            .value;
-
-    const observacoes =
-        document.getElementById("observacoesCompra")
-            .value.trim();
-
-
-    // ==============================
-    // VALIDAÇÕES
-    // ==============================
-
-    if (nome === "") {
-
-        alert("Digite o nome da compra.");
-
-        return;
-    }
-
-
-    if (materialId === "") {
-
-        alert("Selecione o material.");
-
-        return;
-    }
-
-
-    if (quantidade === "") {
-
-        alert("Digite a quantidade.");
-
-        return;
-    }
-
-
-    if (Number(quantidade) <= 0) {
-
-        alert("Digite uma quantidade válida.");
-
-        return;
-    }
-
-
-    if (valorTexto === "") {
-
-        alert("Digite o valor.");
-
-        return;
-    }
-
-
-    // ==============================
-    // CONVERTER VALOR
-    // ==============================
-
-    const valor =
-        Number(
-            valorTexto
-                .replace("R$", "")
-                .replace(/\./g, "")
-                .replace(",", ".")
-                .trim()
-        );
-
-
-    if (isNaN(valor) || valor <= 0) {
-
-        alert("Digite um valor válido.");
-
-        return;
-    }
-
-
-    // ==============================
-    // CRIAR COMPRA
-    // ==============================
-
-    const compra = {
-
-        id: Date.now(),
-
-        nome: nome,
-
-        fornecedor: fornecedor,
-
-        materialId:
-            materialId === "outros"
-                ? "outros"
-                : Number(materialId),
-
-        quantidade:
-            Number(quantidade),
-
-        valor: valor,
-
-        data: data,
-
-        observacoes: observacoes
-
-    };
-
-
-    // ==============================
-    // SALVAR COMPRA
-    // ==============================
-
-    compras.push(compra);
-
-    localStorage.setItem(
-        "compras",
-        JSON.stringify(compras)
-    );
-
-
-    // ==============================
-    // ATUALIZAR ESTOQUE
-    // ==============================
-
-    if (materialId !== "outros") {
-
-        const material =
-            materiais.find(
-                material =>
-                    material.id === Number(materialId)
-            );
-
-
-        if (material) {
-
-            material.quantidade =
-                Number(material.quantidade || 0) +
-                Number(quantidade);
-
-
-            localStorage.setItem(
-                "materiais",
-                JSON.stringify(materiais)
-            );
-
-        }
-
-    }
-
-
-    // ==============================
-    // LANÇAR NO FINANCEIRO
-    // ==============================
-
-    const novoLancamento = {
-
-        id: Date.now() + 1,
-
-        descricao:
-            "Compra: " + nome,
-
-        tipo: "despesa",
-
-        valor: valor,
-
-        data: data,
-
-        obraId: "geral",
-
-        observacoes:
-            fornecedor
-                ? "Fornecedor: " + fornecedor +
-                  (observacoes
-                    ? " | " + observacoes
-                    : "")
-                : observacoes
-
-    };
-
-
-    lancamentos.push(novoLancamento);
-
-
-    localStorage.setItem(
-        "lancamentos",
-        JSON.stringify(lancamentos)
-    );
-
-
-    // ==============================
-    // ATUALIZAR TELAS
-    // ==============================
-
-    mostrarCompras();
-
-    mostrarMateriais();
-
-    mostrarLancamentos();
-
-
-    // ==============================
-    // FECHAR E LIMPAR
-    // ==============================
-
-    modalCompra.classList.add("hidden");
-
-    limparFormularioCompra();
-
-
-    alert(
-        "Compra cadastrada!\n\n" +
-        "✓ Estoque atualizado\n" +
-        "✓ Despesa lançada no Financeiro"
-    );
-
-});
-
-    modalCompra.classList.add("hidden");
-
-
-    limparFormularioCompra();
-
-
-
-
-// ==============================
-// LIMPAR FORMULÁRIO
-// ==============================
-
-function limparFormularioCompra() {
-
-    document.getElementById("nomeCompra").value = "";
-
-    document.getElementById("fornecedorCompra").value = "";
-
-    document.getElementById("materialCompra").value = "";
-
-    document.getElementById("quantidadeCompra").value = "";
-
-    document.getElementById("valorCompra").value = "";
-
-    document.getElementById("dataCompra").value = "";
-
-    document.getElementById("observacoesCompra").value = "";
-
+const valorCompra = document.getElementById("valorCompra");
+if (valorCompra) {
+    valorCompra.addEventListener("input", function() {
+        let v = this.value.replace(/\D/g, "");
+        if (v === "") { this.value = ""; return; }
+        this.value = (Number(v) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    });
 }
 
-// ==============================
-// MOSTRAR COMPRAS
-// ==============================
+if (salvarCompra) {
+    salvarCompra.addEventListener("click", function() {
+        const nome = document.getElementById("nomeCompra").value.trim();
+        const fornecedor = document.getElementById("fornecedorCompra").value.trim();
+        const materialId = document.getElementById("materialCompra").value;
+        const quantidade = document.getElementById("quantidadeCompra").value;
+        const valorTexto = document.getElementById("valorCompra").value;
+        const data = document.getElementById("dataCompra").value;
+        const observacoes = document.getElementById("observacoesCompra").value.trim();
+
+        if (nome === "") { alert("Digite o nome da compra."); return; }
+        if (materialId === "") { alert("Selecione o material."); return; }
+        if (quantidade === "" || Number(quantidade) <= 0) { alert("Digite uma quantidade válida."); return; }
+        if (valorTexto === "") { alert("Digite o valor."); return; }
+
+        const valor = Number(valorTexto.replace("R$", "").replace(/\./g, "").replace(",", ".").trim());
+
+        if (isNaN(valor) || valor <= 0) {
+            alert("Digite um valor válido.");
+            return;
+        }
+
+        const compra = {
+            id: Date.now(),
+            nome: nome,
+            fornecedor: fornecedor,
+            materialId: materialId === "outros" ? "outros" : Number(materialId),
+            quantidade: Number(quantidade),
+            valor: valor,
+            data: data,
+            observacoes: observacoes
+        };
+
+        compras.push(compra);
+        localStorage.setItem("compras", JSON.stringify(compras));
+
+        // Atualizar Estoque
+        if (materialId !== "outros") {
+            const material = materiais.find(m => m.id === Number(materialId));
+            if (material) {
+                material.quantidade = Number(material.quantidade || 0) + Number(quantidade);
+                localStorage.setItem("materiais", JSON.stringify(materiais));
+            }
+        }
+
+        // Lançar Financeiro
+        const novoLancamento = {
+            id: Date.now() + 1,
+            descricao: "Compra: " + nome,
+            tipo: "despesa",
+            valor: valor,
+            data: data,
+            obraId: "geral",
+            observacoes: fornecedor ? "Fornecedor: " + fornecedor + (observacoes ? " | " + observacoes : "") : observacoes
+        };
+
+        lancamentos.push(novoLancamento);
+        localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+
+        mostrarCompras();
+        mostrarMateriais();
+        mostrarLancamentos();
+
+        modalCompra.classList.add("hidden");
+        limparFormularioCompra();
+
+        alert("Compra cadastrada!\n\n✓ Estoque atualizado\n✓ Despesa lançada no Financeiro");
+    });
+}
+
+function limparFormularioCompra() {
+    document.getElementById("nomeCompra").value = "";
+    document.getElementById("fornecedorCompra").value = "";
+    document.getElementById("materialCompra").value = "";
+    document.getElementById("quantidadeCompra").value = "";
+    document.getElementById("valorCompra").value = "";
+    document.getElementById("dataCompra").value = "";
+    document.getElementById("observacoesCompra").value = "";
+}
 
 function mostrarCompras(lista = compras) {
-
-    const tabela =
-        document.getElementById("listaCompras");
+    const tabela = document.getElementById("listaCompras");
+    if (!tabela) return;
 
     tabela.innerHTML = "";
+    const ordenadas = [...lista].sort((a, b) =>
+        String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" })
+    );
 
-
-    const comprasOrdenadas =
-        [...lista].sort((a, b) =>
-            String(a.nome || "").localeCompare(
-                String(b.nome || ""),
-                "pt-BR",
-                { sensitivity: "base" }
-            )
-        );
-
-
-    comprasOrdenadas.forEach(compra => {
-
-        const material =
-            materiais.find(
-                material =>
-                    material.id === Number(compra.materialId)
-            );
-
-
-        const linha =
-            document.createElement("tr");
-
+    ordenadas.forEach(compra => {
+        const material = materiais.find(m => m.id === Number(compra.materialId));
+        const linha = document.createElement("tr");
 
         linha.innerHTML = `
-            <td>
-                ${compra.nome}
-            </td>
-
-            <td>
-                ${compra.fornecedor || "-"}
-            </td>
-
-            <td>
-                ${material ? material.nome : "-"}
-            </td>
-
-            <td>
-                ${compra.quantidade}
-            </td>
-
-            <td>
-                ${
-                    Number(compra.valor || 0)
-                        .toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL"
-                        })
-                }
-            </td>
-
-            <td>
-                ${
-                    compra.data
-                        ? new Date(
-                            compra.data + "T00:00:00"
-                        ).toLocaleDateString("pt-BR")
-                        : "-"
-                }
-            </td>
-
-            <td>
-
-                <button
-                    class="secondary-button"
-                    onclick="excluirCompra(${compra.id})">
-                    Excluir
-                </button>
-
-            </td>
+            <td>${compra.nome}</td>
+            <td>${compra.fornecedor || "-"}</td>
+            <td>${material ? material.nome : "-"}</td>
+            <td>${compra.quantidade}</td>
+            <td>${Number(compra.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+            <td>${compra.data ? new Date(compra.data + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</td>
+            <td><button class="secondary-button" onclick="excluirCompra(${compra.id})">Excluir</button></td>
         `;
-
-
         tabela.appendChild(linha);
-
     });
-
 
     atualizarTotalCompras();
 }
 
-
-// ==============================
-// TOTAL DE COMPRAS
-// ==============================
-
 function atualizarTotalCompras() {
-
-    const total =
-        compras.length;
-
-
-    document.getElementById(
-        "totalCompras"
-    ).textContent =
-
-        total === 1
-            ? "1 compra"
-            : total + " compras";
-
+    const el = document.getElementById("totalCompras");
+    if (el) el.textContent = compras.length === 1 ? "1 compra" : compras.length + " compras";
 }
-
-
-// ==============================
-// EXCLUIR COMPRA
-// ==============================
 
 function excluirCompra(id) {
-
-    if (
-        !confirm(
-            "Deseja realmente excluir esta compra?"
-        )
-    ) {
-        return;
-    }
-
-
-    compras =
-        compras.filter(
-            compra => compra.id !== id
-        );
-
-
-    localStorage.setItem(
-        "compras",
-        JSON.stringify(compras)
-    );
-
-
+    if (!confirm("Deseja realmente excluir esta compra?")) return;
+    compras = compras.filter(c => c.id !== id);
+    localStorage.setItem("compras", JSON.stringify(compras));
     mostrarCompras();
-
 }
 
 
 // ==============================
-// PESQUISAR COMPRAS
-// ==============================
-
-const pesquisaCompra =
-    document.getElementById("pesquisaCompra");
-
-
-pesquisaCompra.addEventListener(
-    "input",
-    function() {
-
-        const pesquisa =
-            this.value
-                .toLowerCase()
-                .trim();
-
-
-        const comprasFiltradas =
-            compras.filter(compra => {
-
-                const material =
-                    materiais.find(
-                        material =>
-                            material.id ===
-                            Number(compra.materialId)
-                    );
-
-
-                return (
-
-                    String(compra.nome || "")
-                        .toLowerCase()
-                        .includes(pesquisa)
-
-                    ||
-
-                    String(compra.fornecedor || "")
-                        .toLowerCase()
-                        .includes(pesquisa)
-
-                    ||
-
-                    String(material?.nome || "")
-                        .toLowerCase()
-                        .includes(pesquisa)
-
-                );
-
-            });
-
-
-        mostrarCompras(
-            comprasFiltradas
-        );
-
-    }
-);
-
-
-// ==============================
-// CARREGAR COMPRAS
-// ==============================
-
-mostrarCompras();
-
-
-// ==============================
-// LOGIN GESTOROBRA
+// AUTENTICAÇÃO E LOGIN
 // ==============================
 
 const usuarioCorreto = "ADM";
@@ -2845,102 +1158,66 @@ const loginSenha = document.getElementById("loginSenha");
 const btnLogin = document.getElementById("btnLogin");
 const erroLogin = document.getElementById("erroLogin");
 
-
-// ==============================
-// FUNÇÃO PARA ENTRAR
-// ==============================
-
 function fazerLogin() {
+    if (!loginUsuario || !loginSenha) return;
 
     const usuario = loginUsuario.value.trim();
     const senha = loginSenha.value;
 
     if (usuario === usuarioCorreto && senha === senhaCorreta) {
-
-        // Salva o acesso
-        localStorage.setItem(
-            "gestorObraLogado",
-            "true"
-        );
-
-        // Esconde a tela de login
+        localStorage.setItem("gestorObraLogado", "true");
         telaLogin.classList.add("hidden");
-document.querySelectorAll(".page").forEach(function(page) {
-    page.classList.add("hidden");
-});
 
-document.getElementById("page-dashboard").classList.remove("hidden");
+        pages.forEach(p => p.classList.add("hidden"));
+        document.getElementById("page-dashboard").classList.remove("hidden");
 
-document.querySelectorAll(".menu-item").forEach(function(menu) {
-    menu.classList.remove("active");
-});
+        menuItems.forEach(m => m.classList.remove("active"));
+        const dashMenu = document.querySelector('[data-page="dashboard"]');
+        if (dashMenu) dashMenu.classList.add("active");
 
-document.querySelector('[data-page="dashboard"]').classList.add("active");
-        // Esconde mensagem de erro
-        erroLogin.classList.add("hidden");
-
-        // Limpa os campos
+        if (erroLogin) erroLogin.classList.add("hidden");
         loginUsuario.value = "";
         loginSenha.value = "";
-
     } else {
-
-        // Mostra erro
-        erroLogin.classList.remove("hidden");
-
+        if (erroLogin) erroLogin.classList.remove("hidden");
         loginSenha.value = "";
         loginSenha.focus();
-
     }
 }
 
+if (btnLogin) btnLogin.addEventListener("click", fazerLogin);
 
-// ==============================
-// BOTÃO ENTRAR
-// ==============================
+if (loginSenha) {
+    loginSenha.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") fazerLogin();
+    });
+}
 
-btnLogin.addEventListener("click", fazerLogin);
-
-
-// ==============================
-// ENTER NA SENHA
-// ==============================
-
-loginSenha.addEventListener("keydown", function(event) {
-
-    if (event.key === "Enter") {
-
-        fazerLogin();
-
-    }
-
-});
-
-
-// ==============================
-// VERIFICAR ACESSO SALVO
-// ==============================
-
-if (
-    localStorage.getItem("gestorObraLogado") === "true"
-) {
-
-    telaLogin.classList.add("hidden");
-
+if (localStorage.getItem("gestorObraLogado") === "true") {
+    if (telaLogin) telaLogin.classList.add("hidden");
 } else {
-
-    telaLogin.classList.remove("hidden");
-
+    if (telaLogin) telaLogin.classList.remove("hidden");
 }
 
-// BOTÃO SAIR
-document.getElementById("btnSair").addEventListener("click", function(event) {
-    event.preventDefault();
+const btnSair = document.getElementById("btnSair");
+if (btnSair) {
+    btnSair.addEventListener("click", function(event) {
+        event.preventDefault();
+        localStorage.removeItem("gestorObraLogado");
+        if (telaLogin) telaLogin.classList.remove("hidden");
+        if (loginUsuario) loginUsuario.value = "";
+        if (loginSenha) loginSenha.value = "";
+    });
+}
 
-    localStorage.removeItem("gestorObraLogado");
 
-    document.getElementById("telaLogin").classList.remove("hidden");
-    document.getElementById("loginUsuario").value = "";
-    document.getElementById("loginSenha").value = "";
-});
+// ==============================
+// INICIALIZAÇÃO DAS LISTAS
+// ==============================
 
+mostrarClientes();
+mostrarObras();
+mostrarContratos();
+mostrarLancamentos();
+mostrarMateriais();
+mostrarCompras();
