@@ -104,72 +104,54 @@
                     <p>Aqui está um resumo das atividades da sua empresa.</p>
                 </div>
 
-                <!-- CARDS -->
-                <div class="cards">
-                    <div class="card">
-                        <div class="card-icon blue">👥</div>
-                        <div>
-                            <span>Clientes</span>
-                            <strong>0</strong>
-                        </div>
-                    </div>
-
-                    <div class="card">
+                <!-- CARDS DE INDICADORES DINÂMICOS -->
+                <div class="cards dashboard-cards">
+                    <div class="card card-indicador">
                         <div class="card-icon orange">🏗️</div>
                         <div>
-                            <span>Obras</span>
-                            <strong>0</strong>
+                            <span class="card-titulo">Obras Ativas</span>
+                            <strong class="card-valor" id="dashObrasAtivas">0</strong>
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card card-indicador">
                         <div class="card-icon green">💰</div>
                         <div>
-                            <span>A receber</span>
-                            <strong>R$ 0,00</strong>
+                            <span class="card-titulo">Total de Receitas</span>
+                            <strong class="card-valor receita" id="dashTotalReceitas">R$ 0,00</strong>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-icon red">📦</div>
+                    <div class="card card-indicador">
+                        <div class="card-icon red">💸</div>
                         <div>
-                            <span>Estoque baixo</span>
-                            <strong>0</strong>
+                            <span class="card-titulo">Total de Despesas</span>
+                            <strong class="card-valor despesa" id="dashTotalDespesas">R$ 0,00</strong>
+                        </div>
+                    </div>
+
+                    <div class="card card-indicador">
+                        <div class="card-icon blue">📊</div>
+                        <div>
+                            <span class="card-titulo">Saldo Geral Caixa</span>
+                            <strong class="card-valor" id="dashSaldoGeral">R$ 0,00</strong>
                         </div>
                     </div>
                 </div>
 
                 <!-- ÁREA INFERIOR DASHBOARD -->
-                <div class="dashboard-grid">
-                    <div class="panel">
+                <div class="dashboard-grid" style="margin-top: 24px;">
+                    <div class="panel" style="grid-column: 1 / -1;">
                         <div class="panel-header">
                             <div>
-                                <h3>Obras recentes</h3>
-                                <p>Últimas obras cadastradas</p>
+                                <h3>Resumo das Últimas Obras</h3>
+                                <p>Acompanhamento de orçamento e saldo de caixa por obra</p>
                             </div>
-                            <button>Ver todas</button>
                         </div>
-                        <div class="empty">
-                            <div class="empty-icon">🏗️</div>
-                            <h4>Nenhuma obra cadastrada</h4>
-                            <p>Cadastre sua primeira obra para começar.</p>
-                            <button class="primary-button">+ Nova obra</button>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <div>
-                                <h3>Estoque</h3>
-                                <p>Situação dos materiais</p>
-                            </div>
-                            <button>Ver estoque</button>
-                        </div>
-                        <div class="empty">
-                            <div class="empty-icon">📦</div>
-                            <h4>Nenhum material cadastrado</h4>
-                            <p>Cadastre materiais para controlar seu estoque.</p>
-                            <button class="primary-button">+ Novo material</button>
+                        
+                        <!-- Lista atualizada automaticamente via JavaScript -->
+                        <div id="dashListaObrasRecentes" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                            <p style="color: #94a3b8;">Nenhuma obra cadastrada até o momento.</p>
                         </div>
                     </div>
                 </div>
@@ -277,7 +259,7 @@
                     </div>
 
                     <div class="panel">
-                        <h3>🏗️ Obras</h3>
+                        <h3>🏗️️ Obras</h3>
                         <div id="obrasDoCliente">
                             <p>Nenhuma obra cadastrada para este cliente.</p>
                         </div>
@@ -312,47 +294,62 @@
                     <button class="primary-button" id="btnNovaObra">+ Nova obra</button>
                 </div>
 
-                <!-- MODAL OBRA -->
-                <div id="modalObra" class="modal hidden">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Nova obra</h2>
-                            <button id="fecharModalObra" class="close-button">×</button>
-                        </div>
-                        <div class="form-group">
-                            <label>Nome da obra</label>
-                            <input type="text" id="nomeObra" placeholder="Ex: Reforma da casa">
-                        </div>
-                        <div class="form-group">
-                            <label>Cliente</label>
-                            <select id="clienteObra">
-                                <option value="">Selecione o cliente</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Endereço da obra</label>
-                            <input type="text" id="enderecoObra" placeholder="Rua, número, bairro">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Data de início</label>
-                                <input type="date" id="dataInicioObra">
-                            </div>
-                            <div class="form-group">
-                                <label>Valor estimado</label>
-                                <input type="text" id="valorObra" placeholder="R$ 0,00" inputmode="numeric">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Observações</label>
-                            <textarea id="observacoesObra" placeholder="Observações sobre a obra"></textarea>
-                        </div>
-                        <div class="modal-actions">
-                            <button id="cancelarObra" class="secondary-button">Cancelar</button>
-                            <button id="salvarObra" class="primary-button">Salvar obra</button>
-                        </div>
-                    </div>
-                </div>
+               <!-- MODAL OBRA (ATUALIZADO) -->
+<div id="modalObra" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Nova obra</h2>
+            <button id="fecharModalObra" class="close-button">×</button>
+        </div>
+        <div class="form-group">
+            <label>Nome da obra</label>
+            <input type="text" id="nomeObra" placeholder="Ex: Reforma da casa">
+        </div>
+        <div class="form-group">
+            <label>Cliente</label>
+            <select id="clienteObra">
+                <option value="">Selecione o cliente</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Endereço da obra</label>
+            <input type="text" id="enderecoObra" placeholder="Rua, número, bairro">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Data de início</label>
+                <input type="date" id="dataInicioObra">
+            </div>
+            <div class="form-group">
+                <label>Previsão de término</label>
+                <input type="date" id="dataFimObra">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Status da obra</label>
+                <select id="statusObra">
+                    <option value="planejamento">📋 Em Planeamento</option>
+                    <option value="em_andamento" selected>🏗️ Em Andamento</option>
+                    <option value="pausada">⏸️ Pausada</option>
+                    <option value="concluida">✅ Concluída</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Valor estimado</label>
+                <input type="text" id="valorObra" placeholder="R$ 0,00" inputmode="numeric">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Observações</label>
+            <textarea id="observacoesObra" placeholder="Observações sobre a obra"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button id="cancelarObra" class="secondary-button">Cancelar</button>
+            <button id="salvarObra" class="primary-button">Salvar obra</button>
+        </div>
+    </div>
+</div>
 
                 <div class="panel">
                     <div class="panel-header">
@@ -365,14 +362,14 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Obra</th>
-                                    <th>Cliente</th>
-                                    <th>Endereço</th>
-                                    <th>Valor</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
+    <tr>
+        <th>Obra</th>
+        <th>Cliente</th>
+        <th>Status</th>
+        <th>Valor</th>
+        <th>Ações</th>
+    </tr>
+</thead>
                             <tbody id="listaObras"></tbody>
                         </table>
                     </div>
