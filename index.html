@@ -15,21 +15,23 @@
             <h1>GestorObra</h1>
             <p>Acesse sua conta</p>
 
-            <div class="form-group">
-                <label>Usuário</label>
-                <input type="text" id="loginUsuario" placeholder="Digite seu usuário" autocomplete="username">
-            </div>
+            <form id="formLoginOnSubmit" onsubmit="event.preventDefault(); document.getElementById('btnLogin').click();">
+                <div class="form-group">
+                    <label>Usuário</label>
+                    <input type="text" id="loginUsuario" placeholder="Digite seu usuário" autocomplete="username">
+                </div>
 
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" id="loginSenha" placeholder="Digite sua senha" autocomplete="current-password">
-            </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="loginSenha" placeholder="Digite sua senha" autocomplete="current-password">
+                </div>
 
-            <button type="button" id="btnLogin" class="primary-button login-button">
-                Entrar
-            </button>
+                <button type="button" id="btnLogin" class="primary-button login-button">
+                    Entrar
+                </button>
+            </form>
 
-            <p id="erroLogin" class="login-error hidden">
+            <p id="erroLogin" class="login-error hidden" style="color: #ef4444; margin-top: 10px;">
                 Usuário ou senha incorretos.
             </p>
         </div>
@@ -69,9 +71,6 @@
             </nav>
 
             <div class="menu-bottom">
-                <a href="#" class="menu-item">
-                    ⚙️ <span>Configurações</span>
-                </a>
                 <a href="#" class="menu-item" id="btnSair">
                     🚪 <span>Sair</span>
                 </a>
@@ -106,6 +105,14 @@
 
                 <!-- CARDS DE INDICADORES DINÂMICOS -->
                 <div class="cards dashboard-cards">
+                    <div class="card card-indicador">
+                        <div class="card-icon purple">👥</div>
+                        <div>
+                            <span class="card-titulo">Total de Clientes</span>
+                            <strong class="card-valor" id="dashTotalClientes">0</strong>
+                        </div>
+                    </div>
+
                     <div class="card card-indicador">
                         <div class="card-icon orange">🏗️</div>
                         <div>
@@ -149,7 +156,6 @@
                             </div>
                         </div>
                         
-                        <!-- Lista atualizada automaticamente via JavaScript -->
                         <div id="dashListaObrasRecentes" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
                             <p style="color: #94a3b8;">Nenhuma obra cadastrada até o momento.</p>
                         </div>
@@ -235,7 +241,6 @@
                         <button class="secondary-button" id="voltarClientes">← Voltar para clientes</button>
                         <h2 id="fichaNomeCliente">Cliente</h2>
                         <p>Informações e histórico do cliente</p>
-                        <button class="primary-button" id="editarCliente">✏️ Editar cliente</button>
                     </div>
                 </div>
 
@@ -259,7 +264,7 @@
                     </div>
 
                     <div class="panel">
-                        <h3>🏗️️ Obras</h3>
+                        <h3>🏗️ Obras</h3>
                         <div id="obrasDoCliente">
                             <p>Nenhuma obra cadastrada para este cliente.</p>
                         </div>
@@ -268,13 +273,15 @@
                     <div class="panel">
                         <h3>📄 Contratos</h3>
                         <div id="contratosDoCliente">
-                            <p>Nenum contrato cadastrado para este cliente.</p>
+                            <p>Nenhum contrato cadastrado para este cliente.</p>
                         </div>
                     </div>
 
                     <div class="panel">
                         <h3>💰 Financeiro</h3>
-                        <p>Nenhum lançamento financeiro para este cliente.</p>
+                        <div id="financeiroDoCliente">
+                            <p>Nenhum lançamento financeiro para este cliente.</p>
+                        </div>
                     </div>
 
                     <div class="panel">
@@ -294,62 +301,62 @@
                     <button class="primary-button" id="btnNovaObra">+ Nova obra</button>
                 </div>
 
-               <!-- MODAL OBRA (ATUALIZADO) -->
-<div id="modalObra" class="modal hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Nova obra</h2>
-            <button id="fecharModalObra" class="close-button">×</button>
-        </div>
-        <div class="form-group">
-            <label>Nome da obra</label>
-            <input type="text" id="nomeObra" placeholder="Ex: Reforma da casa">
-        </div>
-        <div class="form-group">
-            <label>Cliente</label>
-            <select id="clienteObra">
-                <option value="">Selecione o cliente</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Endereço da obra</label>
-            <input type="text" id="enderecoObra" placeholder="Rua, número, bairro">
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Data de início</label>
-                <input type="date" id="dataInicioObra">
-            </div>
-            <div class="form-group">
-                <label>Previsão de término</label>
-                <input type="date" id="dataFimObra">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Status da obra</label>
-                <select id="statusObra">
-                    <option value="planejamento">📋 Em Planeamento</option>
-                    <option value="em_andamento" selected>🏗️ Em Andamento</option>
-                    <option value="pausada">⏸️ Pausada</option>
-                    <option value="concluida">✅ Concluída</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Valor estimado</label>
-                <input type="text" id="valorObra" placeholder="R$ 0,00" inputmode="numeric">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Observações</label>
-            <textarea id="observacoesObra" placeholder="Observações sobre a obra"></textarea>
-        </div>
-        <div class="modal-actions">
-            <button id="cancelarObra" class="secondary-button">Cancelar</button>
-            <button id="salvarObra" class="primary-button">Salvar obra</button>
-        </div>
-    </div>
-</div>
+                <!-- MODAL OBRA -->
+                <div id="modalObra" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Nova obra</h2>
+                            <button id="fecharModalObra" class="close-button">×</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Nome da obra</label>
+                            <input type="text" id="nomeObra" placeholder="Ex: Reforma da casa">
+                        </div>
+                        <div class="form-group">
+                            <label>Cliente</label>
+                            <select id="clienteObra">
+                                <option value="">Selecione o cliente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Endereço da obra</label>
+                            <input type="text" id="enderecoObra" placeholder="Rua, número, bairro">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Data de início</label>
+                                <input type="date" id="dataInicioObra">
+                            </div>
+                            <div class="form-group">
+                                <label>Previsão de término</label>
+                                <input type="date" id="dataFimObra">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Status da obra</label>
+                                <select id="statusObra">
+                                    <option value="planejamento">📋 Em Planejamento</option>
+                                    <option value="em_andamento" selected>🏗️ Em Andamento</option>
+                                    <option value="pausada">⏸️ Pausada</option>
+                                    <option value="concluida">✅ Concluída</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Valor estimado</label>
+                                <input type="text" id="valorObra" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Observações</label>
+                            <textarea id="observacoesObra" placeholder="Observações sobre a obra"></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button id="cancelarObra" class="secondary-button">Cancelar</button>
+                            <button id="salvarObra" class="primary-button">Salvar obra</button>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="panel">
                     <div class="panel-header">
@@ -362,14 +369,14 @@
                     <div class="table-container">
                         <table>
                             <thead>
-    <tr>
-        <th>Obra</th>
-        <th>Cliente</th>
-        <th>Status</th>
-        <th>Valor</th>
-        <th>Ações</th>
-    </tr>
-</thead>
+                                <tr>
+                                    <th>Obra</th>
+                                    <th>Cliente</th>
+                                    <th>Status</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
                             <tbody id="listaObras"></tbody>
                         </table>
                     </div>
@@ -418,12 +425,16 @@
 
                     <div class="panel">
                         <h3>📦 Materiais</h3>
-                        <p>Nenhum material lançado para esta obra.</p>
+                        <div id="materiaisDaObra">
+                            <p>Nenhum material lançado para esta obra.</p>
+                        </div>
                     </div>
 
                     <div class="panel">
                         <h3>💰 Financeiro</h3>
-                        <p>Nenhum lançamento financeiro para esta obra.</p>
+                        <div id="financeiroDaObra">
+                            <p>Nenhum lançamento financeiro para esta obra.</p>
+                        </div>
                     </div>
 
                     <div class="panel">
@@ -467,13 +478,20 @@
                             </div>
                             <div class="form-group">
                                 <label>Valor do contrato</label>
-                                <input type="text" id="valorContrato" placeholder="R$ 0,00" inputmode="numeric">
+                                <input type="text" id="valorContrato" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                             </div>
                         </div>
                         <div class="form-group">
                             <label>Observações</label>
                             <textarea id="observacoesContrato" placeholder="Observações sobre o contrato"></textarea>
                         </div>
+
+                        <div class="form-group">
+                            <label for="arquivoContrato">Anexo do Contrato (PDF, PNG ou JPG):</label>
+                            <input type="file" id="arquivoContrato" accept=".pdf, image/png, image/jpeg">
+                            <small style="color: #94a3b8;">Tamanho recomendado: até 2MB.</small>
+                        </div>
+
                         <div class="modal-actions">
                             <button id="cancelarContrato" class="secondary-button">Cancelar</button>
                             <button id="salvarContrato" class="primary-button">Salvar contrato</button>
@@ -513,7 +531,6 @@
                         <button class="secondary-button" id="voltarContratos">← Voltar para contratos</button>
                         <h2 id="fichaNomeContrato">Contrato</h2>
                         <p>Informações e detalhes do contrato</p>
-                        <button class="primary-button" id="editarContrato">✏️ Editar contrato</button>
                     </div>
                 </div>
 
@@ -543,6 +560,8 @@
                     <div class="panel">
                         <h3>📝 Observações</h3>
                         <p id="fichaObservacoesContrato">Nenhuma observação.</p>
+                        <p><strong>Anexo:</strong>
+                             <span id="fichaAnexoContrato">Nenhum ficheiro anexado.</span></p>
                     </div>
                 </div>
             </section>
@@ -614,7 +633,7 @@
                         </div>
                         <div class="form-group">
                             <label>Valor</label>
-                            <input type="text" id="valorLancamento" placeholder="R$ 0,00" inputmode="numeric">
+                            <input type="text" id="valorLancamento" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                         </div>
                         <div class="form-group">
                             <label>Observações</label>
@@ -700,7 +719,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Preço unitário</label>
-                                <input type="text" id="precoMaterial" placeholder="R$ 0,00" inputmode="numeric">
+                                <input type="text" id="precoMaterial" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                             </div>
                         </div>
                         <div class="modal-actions">
@@ -777,7 +796,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Valor total</label>
-                                <input type="text" id="valorCompra" placeholder="R$ 0,00" inputmode="numeric">
+                                <input type="text" id="valorCompra" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                             </div>
                         </div>
                         <div class="form-group">
