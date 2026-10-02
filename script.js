@@ -13,7 +13,7 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(firebase.app(), "gestorobra");
+const db = firebase.firestore();
 
 // ==============================
 // AUTENTICAÇÃO E LOGIN (CORRIGIDO)
