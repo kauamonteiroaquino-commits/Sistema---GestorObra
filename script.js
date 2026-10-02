@@ -170,17 +170,33 @@ const cancelarCliente = document.getElementById("cancelarCliente");
 const salvarCliente = document.getElementById("salvarCliente");
 const tituloModalCliente = document.getElementById("tituloModalCliente");
 
+function fecharModalCliente() {
+    if (modalCliente) {
+        modalCliente.classList.add("hidden");
+        modalCliente.classList.remove("active", "open");
+        modalCliente.style.display = "none";
+    }
+}
+
+function abrirModalClienteFunc() {
+    if (modalCliente) {
+        modalCliente.classList.remove("hidden");
+        modalCliente.classList.add("active");
+        modalCliente.style.display = "flex";
+    }
+}
+
 if (btnNovoCliente) {
     btnNovoCliente.addEventListener("click", function() {
         clienteEmEdicaoId = null;
         if (tituloModalCliente) tituloModalCliente.textContent = "Novo Cliente";
         limparFormularioCliente();
-        if (modalCliente) modalCliente.classList.remove("hidden");
+        abrirModalClienteFunc();
     });
 }
 
-if (fecharModal) fecharModal.addEventListener("click", () => modalCliente.classList.add("hidden"));
-if (cancelarCliente) cancelarCliente.addEventListener("click", () => modalCliente.classList.add("hidden"));
+if (fecharModal) fecharModal.addEventListener("click", fecharModalCliente);
+if (cancelarCliente) cancelarCliente.addEventListener("click", fecharModalCliente);
 
 if (salvarCliente) {
     salvarCliente.addEventListener("click", async function() {
@@ -208,7 +224,7 @@ if (salvarCliente) {
                 });
             }
 
-            if (modalCliente) modalCliente.classList.add("hidden");
+            fecharModalCliente();
             limparFormularioCliente();
         } catch (error) {
             console.error("Erro ao salvar cliente no Firebase:", error);
@@ -254,7 +270,7 @@ function editarCliente(id) {
     document.getElementById("enderecoCliente").value = cliente.endereco || "";
     document.getElementById("observacoesCliente").value = cliente.observacoes || "";
 
-    if (modalCliente) modalCliente.classList.remove("hidden");
+    abrirModalClienteFunc();
 }
 
 async function excluirCliente(id) {
@@ -975,12 +991,10 @@ function aplicarMascaraCpfCnpj(e) {
     let valor = e.target.value.replace(/\D/g, "");
     
     if (valor.length <= 11) {
-        // Formato CPF: 000.000.000-00
         valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
         valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
         valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     } else {
-        // Formato CNPJ: 00.000.000/0000-00
         valor = valor.substring(0, 14);
         valor = valor.replace(/^(\d{2})(\d)/, "$1.$2");
         valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
