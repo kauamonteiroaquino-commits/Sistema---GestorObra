@@ -3,162 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
     <title>GestorObra</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+    <!-- CARREGAMENTO INICIAL -->
+    <div id="splash" class="splash">Carregando…</div>
+
+    <!-- AVISOS -->
+    <div id="toasts" aria-live="polite"></div>
+
     <!-- TELA DE LOGIN -->
-    <div id="telaLogin" class="login-screen">
+    <div id="telaLogin" class="login-screen hidden">
         <div class="login-box">
-            <h1>GestorObra</h1>
+            <h1>🏗 GestorObra</h1>
             <p>Acesse sua conta</p>
 
-            <form id="formLoginOnSubmit" onsubmit="event.preventDefault(); document.getElementById('btnLogin').click();">
+            <form id="formLogin" novalidate>
                 <div class="form-group">
-                    <label>Usuário</label>
-                    <input type="text" id="loginUsuario" placeholder="Digite seu usuário" autocomplete="username">
+                    <label for="loginEmail">E-mail</label>
+                    <input type="email" id="loginEmail" placeholder="seuemail@exemplo.com" autocomplete="username">
                 </div>
 
                 <div class="form-group">
-                    <label>Senha</label>
+                    <label for="loginSenha">Senha</label>
                     <input type="password" id="loginSenha" placeholder="Digite sua senha" autocomplete="current-password">
                 </div>
 
-                <button type="button" id="btnLogin" class="primary-button login-button">
-                    Entrar
-                </button>
+                <button type="submit" id="btnLogin" class="primary-button login-button">Entrar</button>
             </form>
 
-            <p id="erroLogin" class="login-error hidden" style="color: #ef4444; margin-top: 10px;">
-                Usuário ou senha incorretos.
-            </p>
+            <p id="erroLogin" class="login-error hidden"></p>
+            <p class="login-extra"><button type="button" id="btnEsqueciSenha" class="link-button">Esqueci minha senha</button></p>
         </div>
     </div>
 
     <!-- APLICAÇÃO PRINCIPAL -->
-    <div class="app">
+    <div class="app hidden">
 
         <!-- MENU LATERAL -->
         <aside class="sidebar">
-            <div class="logo">
-                🏗 <span>GestorObra</span>
-            </div>
+            <div class="logo">🏗 <span>GestorObra</span></div>
 
             <nav class="menu">
-                <a href="#" class="menu-item active" data-page="dashboard">
-                    🏠 <span>Dashboard</span>
-                </a>
-                <a href="#" class="menu-item" data-page="clientes">
-                    👥 <span>Clientes</span>
-                </a>
-                <a href="#" class="menu-item" data-page="obras">
-                    🏗 <span>Obras</span>
-                </a>
-                <a href="#" class="menu-item" data-page="contratos">
-                    📄 <span>Contratos</span>
-                </a>
-                
-                <a href="#" class="menu-item" data-page="financeiro">
-                    💰 <span>Financeiro</span>
-                </a>
+                <a href="#" class="menu-item active" data-page="dashboard">🏠 <span>Dashboard</span></a>
+                <a href="#" class="menu-item" data-page="clientes">👥 <span>Clientes</span></a>
+                <a href="#" class="menu-item" data-page="obras">🏗 <span>Obras</span></a>
+                <a href="#" class="menu-item" data-page="contratos">📄 <span>Contratos</span></a>
+                <a href="#" class="menu-item" data-page="estoque">📦 <span>Estoque</span></a>
+                <a href="#" class="menu-item" data-page="financeiro">💰 <span>Financeiro</span></a>
             </nav>
 
             <div class="menu-bottom">
-                <a href="#" class="menu-item" id="btnSair">
-                    🚪 <span>Sair</span>
-                </a>
+                <a href="#" class="menu-item" id="btnTema">🌓 <span>Tema claro/escuro</span></a>
+                <a href="#" class="menu-item" id="btnSair">🚪 <span>Sair</span></a>
             </div>
         </aside>
 
         <!-- ÁREA PRINCIPAL -->
         <main class="main">
 
-            <!-- TOPO -->
             <header class="topbar">
                 <div>
-                    <h1>Dashboard</h1>
-                    <p>Visão geral da sua empresa</p>
+                    <h1 id="tituloPagina">Dashboard</h1>
+                    <p id="subtituloPagina">Visão geral da sua empresa</p>
                 </div>
 
                 <div class="user">
                     <div class="user-avatar">👤</div>
                     <div>
                         <strong>Administrador</strong>
-                        <small>Gestor</small>
+                        <small id="emailUsuario">Gestor</small>
                     </div>
                 </div>
             </header>
 
-            <!-- TELA: DASHBOARD -->
+            <!-- ==================== DASHBOARD ==================== -->
             <section id="page-dashboard" class="content page">
                 <div class="welcome">
                     <h2>Olá, seja bem-vindo! 👋</h2>
                     <p>Aqui está um resumo das atividades da sua empresa.</p>
                 </div>
 
-                <!-- CARDS DE INDICADORES DINÂMICOS -->
-                <div class="cards dashboard-cards">
-                    <div class="card card-indicador">
+                <div class="cards">
+                    <div class="card">
                         <div class="card-icon purple">👥</div>
-                        <div>
-                            <span class="card-titulo">Total de Clientes</span>
-                            <strong class="card-valor" id="dashTotalClientes">0</strong>
-                        </div>
+                        <div><span>Total de Clientes</span><strong id="dashTotalClientes">0</strong></div>
                     </div>
-
-                    <div class="card card-indicador">
+                    <div class="card">
                         <div class="card-icon orange">🏗️</div>
-                        <div>
-                            <span class="card-titulo">Obras Ativas</span>
-                            <strong class="card-valor" id="dashObrasAtivas">0</strong>
-                        </div>
+                        <div><span>Obras em andamento</span><strong id="dashObrasAtivas">0</strong></div>
                     </div>
-
-                    <div class="card card-indicador">
+                    <div class="card">
                         <div class="card-icon green">💰</div>
-                        <div>
-                            <span class="card-titulo">Total de Receitas</span>
-                            <strong class="card-valor receita" id="dashTotalReceitas">R$ 0,00</strong>
-                        </div>
+                        <div><span>Total de Receitas</span><strong class="receita" id="dashTotalReceitas">R$ 0,00</strong></div>
                     </div>
-
-                    <div class="card card-indicador">
+                    <div class="card">
                         <div class="card-icon red">💸</div>
-                        <div>
-                            <span class="card-titulo">Total de Despesas</span>
-                            <strong class="card-valor despesa" id="dashTotalDespesas">R$ 0,00</strong>
-                        </div>
+                        <div><span>Total de Despesas</span><strong class="despesa" id="dashTotalDespesas">R$ 0,00</strong></div>
                     </div>
-
-                    <div class="card card-indicador">
+                    <div class="card">
                         <div class="card-icon blue">📊</div>
-                        <div>
-                            <span class="card-titulo">Saldo Geral Caixa</span>
-                            <strong class="card-valor" id="dashSaldoGeral">R$ 0,00</strong>
-                        </div>
+                        <div><span>Saldo Geral Caixa</span><strong id="dashSaldoGeral">R$ 0,00</strong></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon orange">📦</div>
+                        <div><span>Materiais com estoque baixo</span><strong id="dashEstoqueBaixo">0</strong></div>
                     </div>
                 </div>
 
-                <!-- ÁREA INFERIOR DASHBOARD -->
-                <div class="dashboard-grid" style="margin-top: 24px;">
-                    <div class="panel" style="grid-column: 1 / -1;">
-                        <div class="panel-header">
-                            <div>
-                                <h3>Resumo das Últimas Obras</h3>
-                                <p>Acompanhamento de orçamento e saldo de caixa por obra</p>
-                            </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3>Resumo das Últimas Obras</h3>
+                            <p>Acompanhamento de orçamento e saldo de caixa por obra</p>
                         </div>
-                        
-                        <div id="dashListaObrasRecentes" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-                            <p style="color: #94a3b8;">Nenhuma obra cadastrada até o momento.</p>
+                    </div>
+                    <div id="dashListaObrasRecentes" class="lista-cards">
+                        <p class="muted">Nenhuma obra cadastrada até o momento.</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3>Alertas de estoque</h3>
+                            <p>Materiais no estoque mínimo ou abaixo dele</p>
                         </div>
+                    </div>
+                    <div id="dashAlertasEstoque" class="lista-cards">
+                        <p class="muted">Nenhum alerta no momento.</p>
                     </div>
                 </div>
             </section>
 
-            <!-- TELA: CLIENTES -->
+            <!-- ==================== CLIENTES ==================== -->
             <section id="page-clientes" class="page hidden">
                 <div class="page-header">
                     <div>
@@ -168,44 +150,37 @@
                     <button class="primary-button" id="btnNovoCliente">+ Novo cliente</button>
                 </div>
 
-                <!-- MODAL DE CLIENTES -->
                 <div id="modalCliente" class="modal hidden">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3 id="tituloModalCliente">Novo Cliente</h3>
-                            <button id="fecharModal" class="close-btn">&times;</button>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
                         </div>
-                        
                         <div class="modal-body">
                             <div class="form-group">
                                 <label for="nomeCliente">Nome do Cliente *</label>
                                 <input type="text" id="nomeCliente" placeholder="Ex: Nome da Pessoa ou Empresa">
                             </div>
-
                             <div class="form-group">
                                 <label for="telefoneCliente">Telefone</label>
-                                <input type="text" id="telefoneCliente" placeholder="(00) 00000-0000">
+                                <input type="text" id="telefoneCliente" placeholder="(00) 00000-0000" inputmode="tel">
                             </div>
-
                             <div class="form-group">
                                 <label for="documentoCliente">CPF / CNPJ</label>
-                                <input type="text" id="documentoCliente" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+                                <input type="text" id="documentoCliente" placeholder="000.000.000-00 ou 00.000.000/0000-00" inputmode="numeric">
                             </div>
-
                             <div class="form-group">
                                 <label for="enderecoCliente">Endereço</label>
                                 <input type="text" id="enderecoCliente" placeholder="Endereço completo">
                             </div>
-
                             <div class="form-group">
                                 <label for="observacoesCliente">Observações</label>
                                 <textarea id="observacoesCliente" placeholder="Detalhes adicionais..."></textarea>
                             </div>
                         </div>
-
                         <div class="modal-footer">
-                            <button id="cancelarCliente" class="secondary-button">Cancelar</button>
-                            <button id="salvarCliente" class="primary-button">Salvar Cliente</button>
+                            <button type="button" class="secondary-button" data-close>Cancelar</button>
+                            <button type="button" id="salvarCliente" class="primary-button">Salvar Cliente</button>
                         </div>
                     </div>
                 </div>
@@ -216,18 +191,12 @@
                             <h3>Clientes cadastrados</h3>
                             <p id="totalClientes">0 clientes</p>
                         </div>
-                        <input type="text" id="pesquisaCliente" placeholder="🔎 Pesquisar cliente...">
+                        <input type="search" id="pesquisaCliente" placeholder="🔎 Pesquisar cliente...">
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Telefone</th>
-                                    <th>CPF/CNPJ</th>
-                                    <th>Endereço</th>
-                                    <th>Ações</th>
-                                </tr>
+                                <tr><th>Nome</th><th>Telefone</th><th>CPF/CNPJ</th><th>Endereço</th><th>Ações</th></tr>
                             </thead>
                             <tbody id="listaClientes"></tbody>
                         </table>
@@ -235,11 +204,11 @@
                 </div>
             </section>
 
-            <!-- TELA: FICHA DO CLIENTE -->
+            <!-- ==================== FICHA DO CLIENTE ==================== -->
             <section id="page-ficha-cliente" class="page hidden">
                 <div class="page-header">
                     <div>
-                        <button class="secondary-button" id="voltarClientes">← Voltar para clientes</button>
+                        <button type="button" class="secondary-button" id="voltarClientes">← Voltar para clientes</button>
                         <h2 id="fichaNomeCliente">Cliente</h2>
                         <p>Informações e histórico do cliente</p>
                     </div>
@@ -249,50 +218,35 @@
                     <div class="panel">
                         <h3>👤 Dados do cliente</h3>
                         <div class="dados-grid">
-                            <div>
-                                <span>Telefone</span>
-                                <strong id="fichaTelefone">-</strong>
-                            </div>
-                            <div>
-                                <span>CPF/CNPJ</span>
-                                <strong id="fichaDocumento">-</strong>
-                            </div>
-                            <div>
-                                <span>Endereço</span>
-                                <strong id="fichaEndereco">-</strong>
-                            </div>
+                            <div><span>Telefone</span><strong id="fichaTelefone">-</strong></div>
+                            <div><span>CPF/CNPJ</span><strong id="fichaDocumento">-</strong></div>
+                            <div><span>Endereço</span><strong id="fichaEndereco">-</strong></div>
                         </div>
                     </div>
 
                     <div class="panel">
                         <h3>🏗️ Obras</h3>
-                        <div id="obrasDoCliente">
-                            <p>Nenhuma obra cadastrada para este cliente.</p>
-                        </div>
+                        <div id="obrasDoCliente" class="panel-body"></div>
                     </div>
 
                     <div class="panel">
                         <h3>📄 Contratos</h3>
-                        <div id="contratosDoCliente">
-                            <p>Nenhum contrato cadastrado para este cliente.</p>
-                        </div>
+                        <div id="contratosDoCliente" class="panel-body"></div>
                     </div>
 
                     <div class="panel">
                         <h3>💰 Financeiro</h3>
-                        <div id="financeiroDoCliente">
-                            <p>Nenhum lançamento financeiro para este cliente.</p>
-                        </div>
+                        <div id="financeiroDoCliente" class="panel-body"></div>
                     </div>
 
                     <div class="panel">
                         <h3>📝 Observações</h3>
-                        <p id="fichaObservacoes">Nenhuma observação.</p>
+                        <p id="fichaObservacoes" class="panel-body">Nenhuma observação.</p>
                     </div>
                 </div>
             </section>
 
-            <!-- TELA: OBRAS -->
+            <!-- ==================== OBRAS ==================== -->
             <section id="page-obras" class="page hidden">
                 <div class="page-header">
                     <div>
@@ -302,45 +256,37 @@
                     <button class="primary-button" id="btnNovaObra">+ Nova obra</button>
                 </div>
 
-                <!-- MODAL DE OBRAS -->
                 <div id="modalObra" class="modal hidden">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3 id="tituloModalObra">Nova Obra</h3>
-                            <button id="fecharModalObra" class="close-btn">&times;</button>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
                         </div>
-
                         <div class="modal-body">
                             <div class="form-group">
                                 <label for="nomeObra">Nome da Obra *</label>
                                 <input type="text" id="nomeObra" placeholder="Ex: Residencial Alphaville">
                             </div>
-
                             <div class="form-group">
                                 <label for="clienteObra">Cliente</label>
-                                <select id="clienteObra">
-                                    <!-- Preenchido via JavaScript -->
-                                </select>
+                                <select id="clienteObra"></select>
                             </div>
-
                             <div class="form-group">
                                 <label for="enderecoObra">Endereço</label>
                                 <input type="text" id="enderecoObra" placeholder="Endereço da obra">
                             </div>
-
-                            <div class="form-row" style="display: flex; gap: 10px;">
-                                <div class="form-group" style="flex: 1;">
+                            <div class="form-row">
+                                <div class="form-group">
                                     <label for="dataInicioObra">Data de Início</label>
                                     <input type="date" id="dataInicioObra">
                                 </div>
-                                <div class="form-group" style="flex: 1;">
+                                <div class="form-group">
                                     <label for="dataFimObra">Previsão de Término</label>
                                     <input type="date" id="dataFimObra">
                                 </div>
                             </div>
-
-                            <div class="form-row" style="display: flex; gap: 10px;">
-                                <div class="form-group" style="flex: 1;">
+                            <div class="form-row">
+                                <div class="form-group">
                                     <label for="statusObra">Status</label>
                                     <select id="statusObra">
                                         <option value="Em andamento">Em Andamento</option>
@@ -349,48 +295,43 @@
                                         <option value="Concluída">Concluída</option>
                                     </select>
                                 </div>
-                                <div class="form-group" style="flex: 1;">
+                                <div class="form-group">
                                     <label for="valorObra">Valor (R$)</label>
-                                    <input type="text" id="valorObra" class="input-moeda" placeholder="R$ 0,00">
+                                    <input type="text" id="valorObra" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                                 </div>
                             </div>
-
                             <div class="form-group">
                                 <label for="anexoObra">Anexar Documentos / Imagens da Obra</label>
-                                <input type="file" id="anexoObra" accept="image/*,application/pdf" multiple class="form-control">
+                                <input type="file" id="anexoObra" accept="image/*,application/pdf" multiple>
+                                <span class="form-hint">Imagens são reduzidas automaticamente.</span>
                             </div>
-
                             <div class="form-group">
                                 <label for="observacoesObra">Observações</label>
                                 <textarea id="observacoesObra" placeholder="Detalhes adicionais..."></textarea>
                             </div>
                         </div>
-
                         <div class="modal-footer">
-                            <button id="cancelarObra" class="secondary-button">Cancelar</button>
-                            <button id="salvarObra" class="primary-button">Salvar Obra</button>
+                            <button type="button" class="secondary-button" data-close>Cancelar</button>
+                            <button type="button" id="salvarObra" class="primary-button">Salvar Obra</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- MODAL DE ANEXOS DA OBRA -->
                 <div id="modalAnexosObra" class="modal hidden">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3>Anexos da Obra</h3>
-                            <button id="fecharModalAnexosObra" class="close-btn">&times;</button>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <div style="margin-bottom: 15px;">
-                                <input type="file" id="inputArquivoAnexoObra" multiple style="display: none;">
-                                <button type="button" onclick="document.getElementById('inputArquivoAnexoObra').click()" class="secondary-button">➕ Adicionar Mais Arquivos</button>
+                            <div class="form-group">
+                                <input type="file" id="inputArquivoAnexoObra" accept="image/*,application/pdf" multiple hidden>
+                                <button type="button" id="btnAddAnexoObra" class="secondary-button">➕ Adicionar Mais Arquivos</button>
                             </div>
-                            <div id="listaAnexosObra" style="max-height: 250px; overflow-y: auto;">
-                                <!-- Os anexos aparecem aqui -->
-                            </div>
+                            <div id="listaAnexosObra"></div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" id="fecharAnexosObraBtn" class="secondary-button">Fechar</button>
+                            <button type="button" class="secondary-button" data-close>Fechar</button>
                         </div>
                     </div>
                 </div>
@@ -401,17 +342,12 @@
                             <h3>Obras cadastradas</h3>
                             <p id="totalObras">0 obras</p>
                         </div>
-                        <input type="text" id="pesquisaObra" placeholder="🔎 Pesquisar obra...">
+                        <input type="search" id="pesquisaObra" placeholder="🔎 Pesquisar obra...">
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Obra</th>
-                                    <th>Cliente</th>
-                                    <th>Status</th>
-                                    <th>Ações</th>
-                                </tr>
+                                <tr><th>Obra</th><th>Cliente</th><th>Status</th><th>Valor</th><th>Ações</th></tr>
                             </thead>
                             <tbody id="listaObras"></tbody>
                         </table>
@@ -419,11 +355,11 @@
                 </div>
             </section>
 
-            <!-- TELA: FICHA DA OBRA -->
+            <!-- ==================== FICHA DA OBRA ==================== -->
             <section id="page-ficha-obra" class="page hidden">
                 <div class="page-header">
                     <div>
-                        <button class="secondary-button" id="voltarObras">← Voltar para obras</button>
+                        <button type="button" class="secondary-button" id="voltarObras">← Voltar para obras</button>
                         <h2 id="fichaNomeObra">Obra</h2>
                         <p>Informações e acompanhamento da obra</p>
                     </div>
@@ -433,54 +369,38 @@
                     <div class="panel">
                         <h3>🏗️ Dados da obra</h3>
                         <div class="dados-grid">
-                            <div>
-                                <span>Cliente</span>
-                                <strong id="fichaClienteObra">-</strong>
-                            </div>
-                            <div>
-                                <span>Endereço</span>
-                                <strong id="fichaEnderecoObra">-</strong>
-                            </div>
-                            <div>
-                                <span>Data de início</span>
-                                <strong id="fichaDataObra">-</strong>
-                            </div>
-                            <div>
-                                <span>Valor estimado</span>
-                                <strong id="fichaValorObra">-</strong>
-                            </div>
+                            <div><span>Cliente</span><strong id="fichaClienteObra">-</strong></div>
+                            <div><span>Endereço</span><strong id="fichaEnderecoObra">-</strong></div>
+                            <div><span>Status</span><strong id="fichaStatusObra">-</strong></div>
+                            <div><span>Data de início</span><strong id="fichaDataObra">-</strong></div>
+                            <div><span>Previsão de término</span><strong id="fichaFimObra">-</strong></div>
+                            <div><span>Valor estimado</span><strong id="fichaValorObra">-</strong></div>
                         </div>
                     </div>
 
                     <div class="panel">
                         <h3>📄 Contrato</h3>
-                        <div id="contratosDaObra">
-                            <p>Nenhum contrato cadastrado para esta obra.</p>
-                        </div>
+                        <div id="contratosDaObra" class="panel-body"></div>
                     </div>
 
                     <div class="panel">
                         <h3>📦 Materiais</h3>
-                        <div id="materiaisDaObra">
-                            <p>Nenhum material lançado para esta obra.</p>
-                        </div>
+                        <div id="materiaisDaObra" class="panel-body"></div>
                     </div>
 
                     <div class="panel">
                         <h3>💰 Financeiro</h3>
-                        <div id="financeiroDaObra">
-                            <p>Nenhum lançamento financeiro para esta obra.</p>
-                        </div>
+                        <div id="financeiroDaObra" class="panel-body"></div>
                     </div>
 
                     <div class="panel">
                         <h3>📝 Observações</h3>
-                        <p id="fichaObservacoesObra">Nenhuma observação.</p>
+                        <p id="fichaObservacoesObra" class="panel-body">Nenhuma observação.</p>
                     </div>
                 </div>
             </section>
 
-            <!-- TELA: CONTRATOS -->
+            <!-- ==================== CONTRATOS ==================== -->
             <section id="page-contratos" class="page hidden">
                 <div class="page-header">
                     <div>
@@ -490,79 +410,62 @@
                     <button class="primary-button" id="btnNovoContrato">+ Novo contrato</button>
                 </div>
 
-                <!-- MODAL CONTRATO -->
                 <div id="modalContrato" class="modal hidden">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3 id="tituloModalContrato">Novo Contrato</h3>
-                            <button id="fecharModalContrato" class="close-btn">&times;</button>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
                         </div>
-                        
                         <div class="modal-body">
                             <div class="form-group">
                                 <label for="clienteContrato">Cliente</label>
-                                <select id="clienteContrato">
-                                    <option value="">Selecione o cliente</option>
-                                </select>
+                                <select id="clienteContrato"></select>
                             </div>
-
                             <div class="form-group">
                                 <label for="obraContrato">Obra</label>
-                                <select id="obraContrato">
-                                    <option value="">Selecione a obra</option>
-                                </select>
+                                <select id="obraContrato"></select>
                             </div>
-
-                            <div class="form-row" style="display: flex; gap: 10px;">
-                                <div class="form-group" style="flex: 1;">
+                            <div class="form-row">
+                                <div class="form-group">
                                     <label for="dataContrato">Data do contrato</label>
                                     <input type="date" id="dataContrato">
                                 </div>
-                                <div class="form-group" style="flex: 1;">
-                                    <label for="valorContrato">Valor do contrato</label>
+                                <div class="form-group">
+                                    <label for="valorContrato">Valor do contrato *</label>
                                     <input type="text" id="valorContrato" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                                 </div>
                             </div>
-
                             <div class="form-group">
                                 <label for="descricaoContrato">Observações / Descrição</label>
                                 <textarea id="descricaoContrato" placeholder="Observações sobre o contrato"></textarea>
                             </div>
-
                             <div class="form-group">
                                 <label for="anexoContrato">Anexar Imagens / Documentos</label>
-                                <input type="file" id="anexoContrato" accept="image/*,application/pdf" multiple class="form-control">
+                                <input type="file" id="anexoContrato" accept="image/*,application/pdf" multiple>
                             </div>
                         </div>
-
                         <div class="modal-footer">
-                            <button id="cancelarContrato" class="secondary-button">Cancelar</button>
-                            <button id="salvarContrato" class="primary-button">Salvar contrato</button>
+                            <button type="button" class="secondary-button" data-close>Cancelar</button>
+                            <button type="button" id="salvarContrato" class="primary-button">Salvar contrato</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- MODAL DE ANEXOS DE CONTRATOS -->
                 <div id="modalAnexos" class="modal hidden">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3>Anexos do Contrato</h3>
-                            <button id="fecharModalAnexos" class="close-btn">&times;</button>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
                         </div>
-                        
                         <div class="modal-body">
-                            <div class="form-group" style="margin-bottom: 15px;">
+                            <div class="form-group">
                                 <label for="inputArquivoAnexo">Adicionar Novo Arquivo</label>
-                                <input type="file" id="inputArquivoAnexo" multiple>
+                                <input type="file" id="inputArquivoAnexo" accept="image/*,application/pdf" multiple>
                             </div>
-                            
-                            <div id="listaAnexosContrato" style="max-height: 200px; overflow-y: auto;">
-                                <!-- Lista de anexos carregada dinamicamente -->
-                            </div>
+                            <div id="listaAnexosContrato"></div>
                         </div>
-
                         <div class="modal-footer">
-                            <button id="fecharAnexosBtn" class="secondary-button">Fechar</button>
+                            <button type="button" class="secondary-button" data-close>Fechar</button>
                         </div>
                     </div>
                 </div>
@@ -573,18 +476,12 @@
                             <h3>Contratos cadastrados</h3>
                             <p id="totalContratos">0 contratos</p>
                         </div>
-                        <input type="text" id="pesquisaContrato" placeholder="🔎 Pesquisar contrato...">
+                        <input type="search" id="pesquisaContrato" placeholder="🔎 Pesquisar contrato...">
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Contrato</th>
-                                    <th>Cliente</th>
-                                    <th>Obra</th>
-                                    <th>Valor</th>
-                                    <th>Ações</th>
-                                </tr>
+                                <tr><th>Contrato</th><th>Cliente</th><th>Obra</th><th>Valor</th><th>Ações</th></tr>
                             </thead>
                             <tbody id="listaContratos"></tbody>
                         </table>
@@ -592,7 +489,170 @@
                 </div>
             </section>
 
-            <!-- TELA: FINANCEIRO -->
+            <!-- ==================== ESTOQUE ==================== -->
+            <section id="page-estoque" class="page hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>Estoque de materiais</h2>
+                        <p>Controle de entradas, saídas e saldo</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="secondary-button" id="btnNovaMovimentacao">⇅ Registrar movimentação</button>
+                        <button class="primary-button" id="btnNovoMaterial">+ Novo material</button>
+                    </div>
+                </div>
+
+                <div class="cards">
+                    <div class="card">
+                        <div class="card-icon blue">📦</div>
+                        <div><span>Materiais cadastrados</span><strong id="estTotalItens">0</strong></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon orange">⚠️</div>
+                        <div><span>Estoque baixo / zerado</span><strong id="estBaixo">0</strong></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon green">💰</div>
+                        <div><span>Valor em estoque</span><strong id="estValor">R$ 0,00</strong></div>
+                    </div>
+                </div>
+
+                <div id="modalMaterial" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="tituloModalMaterial">Novo Material</h3>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="nomeMaterial">Material *</label>
+                                <input type="text" id="nomeMaterial" placeholder="Ex: Cimento CP-II 50kg">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="unidadeMaterial">Unidade</label>
+                                    <select id="unidadeMaterial">
+                                        <option>un</option><option>kg</option><option>saco</option><option>m</option>
+                                        <option>m²</option><option>m³</option><option>L</option><option>lata</option>
+                                        <option>caixa</option><option>barra</option><option>milheiro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="minimoMaterial">Estoque mínimo</label>
+                                    <input type="number" id="minimoMaterial" min="0" step="any" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="custoMaterial">Custo unitário</label>
+                                    <input type="text" id="custoMaterial" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
+                                </div>
+                                <div class="form-group" id="grupoSaldoInicial">
+                                    <label for="saldoInicialMaterial">Saldo inicial</label>
+                                    <input type="number" id="saldoInicialMaterial" min="0" step="any" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="secondary-button" data-close>Cancelar</button>
+                            <button type="button" id="salvarMaterial" class="primary-button">Salvar material</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modalMovimentacao" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Registrar movimentação</h3>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="movMaterial">Material *</label>
+                                <select id="movMaterial"></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="movTipo">Tipo</label>
+                                    <select id="movTipo">
+                                        <option value="entrada">Entrada (compra)</option>
+                                        <option value="saida">Saída (uso em obra)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="movQuantidade">Quantidade *</label>
+                                    <input type="number" id="movQuantidade" min="0" step="any" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="movData">Data</label>
+                                    <input type="date" id="movData">
+                                </div>
+                                <div class="form-group">
+                                    <label for="movObra">Obra</label>
+                                    <select id="movObra"></select>
+                                </div>
+                            </div>
+                            <div id="grupoEntrada">
+                                <div class="form-group">
+                                    <label for="movCusto">Custo unitário desta compra</label>
+                                    <input type="text" id="movCusto" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
+                                </div>
+                                <div class="form-group check-row">
+                                    <input type="checkbox" id="movLancarFinanceiro">
+                                    <label for="movLancarFinanceiro">Lançar como despesa no Financeiro</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="movObs">Observações</label>
+                                <input type="text" id="movObs" placeholder="Fornecedor, nota fiscal, finalidade...">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="secondary-button" data-close>Cancelar</button>
+                            <button type="button" id="salvarMovimentacao" class="primary-button">Registrar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3>Materiais</h3>
+                            <p id="totalMateriais">0 materiais</p>
+                        </div>
+                        <input type="search" id="pesquisaMaterial" placeholder="🔎 Pesquisar material...">
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Material</th><th>Saldo</th><th>Mínimo</th><th>Custo unit.</th><th>Situação</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody id="listaMateriais"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3>Últimas movimentações</h3>
+                            <p id="totalMovimentacoes">0 movimentações</p>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Data</th><th>Material</th><th>Tipo</th><th>Quantidade</th><th>Obra</th><th>Observações</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody id="listaMovimentacoes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== FINANCEIRO ==================== -->
             <section id="page-financeiro" class="page hidden">
                 <div class="page-header">
                     <div>
@@ -602,74 +662,61 @@
                     <button class="primary-button" id="btnNovoLancamento">+ Novo lançamento</button>
                 </div>
 
-                <!-- CARDS FINANCEIRO -->
                 <div class="cards">
                     <div class="card">
                         <div class="card-icon green">💰</div>
-                        <div>
-                            <span>Total a receber</span>
-                            <strong id="totalReceitas">R$ 0,00</strong>
-                        </div>
+                        <div><span>Total a receber</span><strong id="totalReceitas">R$ 0,00</strong></div>
                     </div>
                     <div class="card">
                         <div class="card-icon red">💸</div>
-                        <div>
-                            <span>Total de despesas</span>
-                            <strong id="totalDespesas">R$ 0,00</strong>
-                        </div>
+                        <div><span>Total de despesas</span><strong id="totalDespesas">R$ 0,00</strong></div>
                     </div>
                     <div class="card">
                         <div class="card-icon blue">📊</div>
-                        <div>
-                            <span>Saldo</span>
-                            <strong id="saldoFinanceiro">R$ 0,00</strong>
-                        </div>
+                        <div><span>Saldo</span><strong id="saldoFinanceiro">R$ 0,00</strong></div>
                     </div>
                 </div>
 
-                <!-- MODAL LANÇAMENTO -->
                 <div id="modalLancamento" class="modal hidden">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h2>Novo lançamento</h2>
-                            <button id="fecharModalLancamento" class="close-btn">&times;</button>
+                            <h3 id="tituloModalLancamento">Novo lançamento</h3>
+                            <button type="button" class="close-btn" data-close aria-label="Fechar">&times;</button>
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                                <label>Descrição</label>
+                                <label for="descricaoLancamento">Descrição *</label>
                                 <input type="text" id="descricaoLancamento" placeholder="Ex: Pagamento de material">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Tipo</label>
+                                    <label for="tipoLancamento">Tipo</label>
                                     <select id="tipoLancamento">
                                         <option value="receita">Receita</option>
                                         <option value="despesa">Despesa</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Data</label>
+                                    <label for="dataLancamento">Data</label>
                                     <input type="date" id="dataLancamento">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Destino</label>
-                                <select id="obraLancamento">
-                                    <option value="geral">🏢 Geral / Caixa</option>
-                                </select>
+                                <label for="obraLancamento">Destino</label>
+                                <select id="obraLancamento"></select>
                             </div>
                             <div class="form-group">
-                                <label>Valor</label>
+                                <label for="valorLancamento">Valor *</label>
                                 <input type="text" id="valorLancamento" class="input-moeda" placeholder="R$ 0,00" inputmode="numeric">
                             </div>
                             <div class="form-group">
-                                <label>Observações</label>
+                                <label for="observacoesLancamento">Observações</label>
                                 <textarea id="observacoesLancamento" placeholder="Observações sobre o lançamento"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button id="cancelarLancamento" class="secondary-button">Cancelar</button>
-                            <button id="salvarLancamento" class="primary-button">Salvar lançamento</button>
+                            <button type="button" class="secondary-button" data-close>Cancelar</button>
+                            <button type="button" id="salvarLancamento" class="primary-button">Salvar lançamento</button>
                         </div>
                     </div>
                 </div>
@@ -680,20 +727,12 @@
                             <h3>Lançamentos</h3>
                             <p id="totalLancamentos">0 lançamentos</p>
                         </div>
-                        <input type="text" id="pesquisaLancamento" placeholder="🔎 Pesquisar lançamento...">
+                        <input type="search" id="pesquisaLancamento" placeholder="🔎 Pesquisar lançamento...">
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Descrição</th>
-                                    <th>Tipo</th>
-                                    <th>Obra</th>
-                                    <th>Cliente</th>
-                                    <th>Valor</th>
-                                    <th>Data</th>
-                                    <th>Ações</th>
-                                </tr>
+                                <tr><th>Descrição</th><th>Tipo</th><th>Obra</th><th>Cliente</th><th>Valor</th><th>Data</th><th>Ações</th></tr>
                             </thead>
                             <tbody id="listaLancamentos"></tbody>
                         </table>
@@ -703,9 +742,13 @@
 
         </main>
     </div>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase (compat). Para usar o Storage no lugar do Firestore nos anexos, descomente a linha do storage
+         e mude USAR_STORAGE para true no script.js (exige plano Blaze). -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script> -->
     <script src="script.js"></script>
-    
 </body>
 </html>
