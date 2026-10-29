@@ -181,7 +181,12 @@ const MSG_AUTH = {
     'auth/invalid-email': 'E-mail inválido.',
     'auth/user-disabled': 'Este usuário está desativado.',
     'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos e tente novamente.',
-    'auth/network-request-failed': 'Sem conexão com a internet.'
+    'auth/network-request-failed': 'Sem conexão com a internet.',
+    'auth/operation-not-allowed': 'O login por E-mail/senha não está ativado. No Firebase: Authentication → Sign-in method → E-mail/senha → Ativar.',
+    'auth/configuration-not-found': 'O Authentication ainda não foi iniciado. No Firebase: Authentication → clique em "Vamos começar" (Get started).',
+    'auth/invalid-api-key': 'Chave de API inválida. Confira o firebaseConfig no script.js.',
+    'auth/api-key-not-valid.-please-pass-a-valid-api-key.': 'Chave de API inválida. Confira o firebaseConfig no script.js.',
+    'auth/unauthorized-domain': 'Este endereço não está autorizado. No Firebase: Authentication → Settings → Authorized domains → adicione o domínio do site.'
 };
 
 function mostrarErroLogin(msg) {
@@ -202,7 +207,8 @@ $('formLogin').addEventListener('submit', async e => {
         await auth.signInWithEmailAndPassword(email, senha);
         $('loginSenha').value = '';
     } catch (err) {
-        mostrarErroLogin(MSG_AUTH[err.code] || 'Não foi possível entrar. Tente novamente.');
+        console.error('Erro de login:', err);
+        mostrarErroLogin(MSG_AUTH[err.code] || `Não foi possível entrar. Código do erro: ${err.code || err.message}`);
     } finally {
         btn.disabled = false; btn.textContent = 'Entrar';
     }
