@@ -196,6 +196,7 @@ $('btnTema').addEventListener('click', e => {
 // só para que as regras do Firestore (request.auth != null) continuem valendo.
 // =====================================================================
 let appIniciado = false;
+let erroAuth = null;
 function iniciarApp() {
     if (appIniciado) return;
     appIniciado = true;
@@ -218,7 +219,20 @@ async function diagnosticarBanco() {
         console.error('Diagnóstico do banco:', err);
         const c = err && err.code;
         let msg;
-        if (!user) msg = 'Login Anônimo desativado: ative em Firebase → Authentication → Sign-in method → Anônimo.';
+        if (!user) {
+            const ac = erroAuth && erroAuth.code;
+            const MAPA = {
+                'auth/operation-not-allowed': 'Login Anônimo desativado: ative em Firebase → Authentication → Sign-in method → Anônimo.',
+                'auth/admin-restricted-operation': 'Login Anônimo desativado: ative em Firebase → Authentication → Sign-in method → Anônimo.',
+                'auth/configuration-not-found': 'Authentication ainda não foi iniciado: em Firebase → Authentication clique em "Vamos começar".',
+                'auth/unauthorized-domain': 'Este endereço não está autorizado: em Firebase → Authentication → Settings → Domínios autorizados, adicione ' + location.hostname + '.',
+                'auth/operation-not-supported-in-this-environment': 'O site não pode ser aberto direto do arquivo (file://). Abra por um endereço http/https.',
+                'auth/api-key-not-valid.-please-pass-a-valid-api-key.': 'Chave de API do firebaseConfig inválida ou com restrição de domínio.',
+                'auth/invalid-api-key': 'Chave de API do firebaseConfig inválida.',
+                'auth/network-request-failed': 'Sem internet ou conexão com o Firebase bloqueada.'
+            };
+            msg = MAPA[ac] || ('Falha no login automático (' + (ac || 'sem código') + '). Abra o Console (F12) para ver detalhes.');
+        }
         else if (c === 'permission-denied') msg = 'Regras do Firestore bloqueando o acesso (verifique a aba Regras).';
         else if (c === 'not-found' || c === 'failed-precondition') msg = 'Banco Firestore não criado neste projeto (Firebase → Firestore Database → Criar banco).';
         else if (c === 'unavailable') msg = 'Sem internet ou Firebase inacessível.';
@@ -230,6 +244,7 @@ async function diagnosticarBanco() {
 auth.signInAnonymously()
     .catch(err => {
         console.error('Entrada anônima falhou:', err);
+        erroAuth = err;
         if (err.code === 'auth/operation-not-allowed' || err.code === 'auth/admin-restricted-operation') {
             toast('Ative o login Anônimo no Firebase: Authentication → Sign-in method → Anônimo.', 'erro');
         } else if (err.code !== 'auth/network-request-failed') {
