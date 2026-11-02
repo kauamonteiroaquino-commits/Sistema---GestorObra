@@ -4,13 +4,13 @@
 // CONFIGURAÇÃO
 // =====================================================================
 const firebaseConfig = {
-    apiKey: "AIzaSyAUJ1NViUIgmGl8qKf8gsbtlw72R0okOrg",
-    authDomain: "gestorobra-c4a92.firebaseapp.com",
-    projectId: "gestorobra-c4a92",
-    storageBucket: "gestorobra-c4a92.firebasestorage.app",
-    messagingSenderId: "369876379222",
-    appId: "1:369876379222:web:af5dcde7dc3be9e881fdf7",
-    measurementId: "G-1F69BSSMF9"
+    apiKey: "AIzaSyC4kqmjxq7LMtRcbPCddbe07JUOyOj3s6M",
+    authDomain: "gestorobras-6a4e6.firebaseapp.com",
+    projectId: "gestorobras-6a4e6",
+    storageBucket: "gestorobras-6a4e6.firebasestorage.app",
+    messagingSenderId: "3241302897",
+    appId: "1:3241302897:web:14fafadde3e9fd5e35b4d0",
+    measurementId: "G-ELKJJ773QE"
 };
 
 // false = anexos ficam no Firestore (funciona no plano gratuito, limite ~700 KB por arquivo).
@@ -210,7 +210,7 @@ function iniciarApp() {
 // Testa de verdade o servidor (ignora o cache do aparelho) e mostra o resultado no topo.
 async function diagnosticarBanco() {
     const el = $('statusConexao');
-    const marcar = (cls, txt) => { el.className = 'status-conexao ' + cls; el.textContent = txt; };
+    const marcar = (cls, txt) => { el.className = 'status-conexao ' + cls; el.textContent = txt + ' [projeto: ' + firebaseConfig.projectId + ']'; };
     const user = auth.currentUser;
     try {
         await db.collection('clientes').limit(1).get({ source: 'server' });
